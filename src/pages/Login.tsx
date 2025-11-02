@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
+    if (isAuthenticated === "true") {
+      navigate("/");
+    }
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -21,6 +28,7 @@ export default function Login() {
     setTimeout(() => {
       if (email === "denilson.nogueira@wk.com.br" && password === "WKsistemasKPI") {
         toast.success("Login realizado com sucesso!");
+        localStorage.setItem("isAuthenticated", "true");
         navigate("/");
       } else {
         toast.error("Credenciais inválidas!");
@@ -33,7 +41,11 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary to-primary/90 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 bg-card/95 backdrop-blur-sm border-border/50">
         <div className="flex flex-col items-center mb-8">
-          <img src={logoWK} alt="WK" className="h-12 w-auto mb-4" />
+          <img
+            src={logoWK}
+            alt="WK"
+            className="h-12 w-auto mb-4 drop-shadow-[0_0_12px_rgba(0,0,0,0.45)]"
+          />
           <h1 className="text-2xl font-bold text-foreground">Tech Metrics</h1>
           <p className="text-sm text-muted-foreground mt-2">
             Dashboard Executivo de Métricas Técnicas

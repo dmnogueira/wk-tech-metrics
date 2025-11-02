@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import logoWK from "@/assets/logo-wk.png";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,13 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    toast.success("Sessão encerrada com sucesso!");
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-dashboard-bg">
@@ -25,7 +33,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-3">
-              <img src={logoWK} alt="WK" className="h-8 w-auto" />
+              <img
+                src={logoWK}
+                alt="WK"
+                className="h-8 w-auto drop-shadow-[0_0_10px_rgba(0,0,0,0.45)]"
+              />
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-foreground">Tech Metrics</span>
               </div>
@@ -92,7 +104,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover border-border">
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    handleLogout();
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </DropdownMenuItem>

@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
-import logoWK from "@/assets/logo-wk.png";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -32,15 +31,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <header className="border-b border-primary/20 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-3">
-              <img
-                src={logoWK}
-                alt="WK"
-                className="h-8 w-auto drop-shadow-[0_0_10px_rgba(0,0,0,0.45)]"
-              />
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-foreground">Tech Metrics</span>
-              </div>
+            <Link to="/" className="flex items-center">
+              <span className="text-xl font-bold text-foreground">Tech Metrics</span>
             </Link>
             
             <nav className="hidden md:flex items-center gap-1">

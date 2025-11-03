@@ -23,6 +23,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -39,6 +49,7 @@ export default function Squads() {
   const [professionals] = useLocalStorage<Professional[]>("professionals", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSquadId, setEditingSquadId] = useState<string | null>(null);
+  const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Squad, "id">>({
     name: "",
     area: "",
@@ -86,9 +97,12 @@ export default function Squads() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (squadId: string) => {
-    setSquads((previous) => previous.filter((squad) => squad.id !== squadId));
-    toast.success("Squad removido com sucesso!");
+  const confirmDelete = () => {
+    if (deleteSquadId) {
+      setSquads((previous) => previous.filter((squad) => squad.id !== deleteSquadId));
+      toast.success("Squad removido com sucesso!");
+      setDeleteSquadId(null);
+    }
   };
 
   return (
@@ -248,7 +262,7 @@ export default function Squads() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(squad.id)}
+                            onClick={() => setDeleteSquadId(squad.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -270,6 +284,23 @@ export default function Squads() {
             </div>
           </Card>
         )}
+
+        <AlertDialog open={deleteSquadId !== null} onOpenChange={(open) => !open && setDeleteSquadId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este squad? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

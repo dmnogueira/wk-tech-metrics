@@ -16,6 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -29,6 +39,7 @@ export default function JobRolesPage() {
   const [roles, setRoles] = useLocalStorage<JobRole[]>("job-roles", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [deleteRoleId, setDeleteRoleId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<JobRole, "id">>({
     title: "",
     description: "",
@@ -73,9 +84,12 @@ export default function JobRolesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (roleId: string) => {
-    setRoles((previous) => previous.filter((role) => role.id !== roleId));
-    toast.success("Cargo removido com sucesso!");
+  const confirmDelete = () => {
+    if (deleteRoleId) {
+      setRoles((previous) => previous.filter((role) => role.id !== deleteRoleId));
+      toast.success("Cargo removido com sucesso!");
+      setDeleteRoleId(null);
+    }
   };
 
   return (
@@ -186,7 +200,7 @@ export default function JobRolesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(role.id)}
+                            onClick={() => setDeleteRoleId(role.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -208,6 +222,23 @@ export default function JobRolesPage() {
             </div>
           </Card>
         )}
+
+        <AlertDialog open={deleteRoleId !== null} onOpenChange={(open) => !open && setDeleteRoleId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este cargo? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

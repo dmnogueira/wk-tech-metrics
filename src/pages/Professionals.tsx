@@ -12,6 +12,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,6 +43,7 @@ export default function Professionals() {
   const [squads] = useLocalStorage<Squad[]>("squads", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProfessionalId, setEditingProfessionalId] = useState<string | null>(null);
+  const [deleteProfessionalId, setDeleteProfessionalId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
     name: "",
     email: "",
@@ -121,9 +132,12 @@ export default function Professionals() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (professionalId: string) => {
-    setProfessionals((previous) => previous.filter((professional) => professional.id !== professionalId));
-    toast.success("Profissional removido com sucesso!");
+  const confirmDelete = () => {
+    if (deleteProfessionalId) {
+      setProfessionals((previous) => previous.filter((professional) => professional.id !== deleteProfessionalId));
+      toast.success("Profissional removido com sucesso!");
+      setDeleteProfessionalId(null);
+    }
   };
 
   return (
@@ -391,7 +405,7 @@ export default function Professionals() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(professional.id)}
+                          onClick={() => setDeleteProfessionalId(professional.id)}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -412,6 +426,23 @@ export default function Professionals() {
             </div>
           </Card>
         )}
+
+        <AlertDialog open={deleteProfessionalId !== null} onOpenChange={(open) => !open && setDeleteProfessionalId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este profissional? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

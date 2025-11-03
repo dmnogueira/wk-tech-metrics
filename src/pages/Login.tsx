@@ -57,16 +57,19 @@ export default function Login() {
       console.log("Auth state change:", event, session);
       
       if (event === "PASSWORD_RECOVERY") {
-        console.log("Password recovery detected");
+        console.log("Password recovery detected - opening change password dialog");
         setShowForgotPassword(false);
         setShowChangePassword(true);
         if (session?.user?.email) {
           setEmail(session.user.email);
         }
       } else if (event === "SIGNED_IN" && session) {
+        console.log("User signed in, checking must_change_password flag");
         if (session.user.user_metadata?.must_change_password) {
+          console.log("Must change password - showing dialog");
           setShowChangePassword(true);
         } else {
+          console.log("No password change required - navigating to home");
           navigate("/");
         }
       }
@@ -112,13 +115,20 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
-        redirectTo: `${window.location.origin}/login`,
+      const { data, error } = await supabase.functions.invoke('request-password-reset', {
+        body: { email: emailToReset }
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada e clique no link para redefinir sua senha.");
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success(data?.message || "E-mail de recuperação enviado! Verifique sua caixa de entrada.");
       setShowForgotPassword(false);
       setResetEmail("");
     } catch (error: any) {
@@ -143,6 +153,7 @@ export default function Login() {
 
     setIsLoading(true);
     try {
+      console.log("Updating password...");
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
         data: {
@@ -150,10 +161,16 @@ export default function Login() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating password:", error);
+        throw error;
+      }
 
+      console.log("Password updated successfully");
       toast.success("Senha alterada com sucesso!");
       setShowChangePassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
       navigate("/");
     } catch (error: any) {
       console.error("Erro ao alterar senha:", error);

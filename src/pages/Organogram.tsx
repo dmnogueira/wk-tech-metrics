@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -26,23 +24,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pencil, Trash2, Users2, UserCog, ChevronDown, ChevronRight, GripVertical, Briefcase } from "lucide-react";
+import { Pencil, Trash2, Users2, UserCog, ChevronDown, ChevronRight, GripVertical, Briefcase, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { hasPermission } from "@/lib/auth";
-import { JobRole, Professional, Squad } from "@/lib/models";
-
-const createId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Date.now().toString();
+import { Professional } from "@/lib/models";
+import { useProfessionals } from "@/hooks/use-professionals";
+import { useSquads } from "@/hooks/use-squads";
+import { useJobRoles } from "@/hooks/use-job-roles";
 
 export default function Organogram() {
-  const [professionals, setProfessionals] = useLocalStorage<Professional[]>("professionals", []);
-  const [squads] = useLocalStorage<Squad[]>("squads", []);
-  const [jobRoles] = useLocalStorage<JobRole[]>("job-roles", []);
+  const { professionals, isLoading: loadingProfessionals, addProfessional, updateProfessional, deleteProfessional } = useProfessionals();
+  const { squads, isLoading: loadingSquads } = useSquads();
+  const { jobRoles, isLoading: loadingJobRoles } = useJobRoles();
+  
   const [selectedSquadId, setSelectedSquadId] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProfessionalId, setEditingProfessionalId] = useState<string | null>(null);
-  const [draggedProfessionalId, setDraggedProfessionalId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
     name: "",
     email: "",
@@ -58,9 +55,7 @@ export default function Organogram() {
 
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
   const squadOptions = useMemo(() => 
-    squads
-      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-      .map((squad) => squad.name), 
+    squads.map((squad) => squad.name), 
     [squads]
   );
 
@@ -76,8 +71,12 @@ export default function Organogram() {
     return 5; // profissionais comuns
   };
 
-  // Estrutura hierárquica respeitando a ordem: Diretor > Gerente > Coordenador > Squad > Profissionais
+  // Estrutura hierárquica simplificada
   const hierarchicalProfessionals = useMemo(() => {
+    if (!professionals || professionals.length === 0) {
+      return { allProfessionals: [], rootProfessionals: [] };
+    }
+
     // Filtra profissionais baseado no squad selecionado
     let filteredPros = professionals;
     if (selectedSquadId !== "all") {
@@ -102,46 +101,7 @@ export default function Organogram() {
     return { allProfessionals: filteredPros, rootProfessionals };
   }, [professionals, squads, selectedSquadId]);
 
-  // Drag and Drop handlers
-  const handleDragStart = (professionalId: string) => {
-    setDraggedProfessionalId(professionalId);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDropOnProfessional = (targetProfessionalId: string) => {
-    if (!draggedProfessionalId || draggedProfessionalId === targetProfessionalId) return;
-
-    setProfessionals((prev) =>
-      prev.map((p) =>
-        p.id === draggedProfessionalId
-          ? { ...p, managerId: targetProfessionalId }
-          : p
-      )
-    );
-
-    toast.success("Hierarquia atualizada com sucesso!");
-    setDraggedProfessionalId(null);
-  };
-
-  const handleDropOnSquad = (squadName: string) => {
-    if (!draggedProfessionalId) return;
-
-    setProfessionals((prev) =>
-      prev.map((p) =>
-        p.id === draggedProfessionalId
-          ? { ...p, squad: squadName, managerId: undefined }
-          : p
-      )
-    );
-
-    toast.success("Profissional movido para outro squad!");
-    setDraggedProfessionalId(null);
-  };
-
-  // Componente para renderizar um profissional e seus subordinados
+  // Componente simplificado para renderizar profissionais
   interface HierarchyNodeProps {
     professional: Professional;
     allProfessionals: Professional[];
@@ -151,7 +111,7 @@ export default function Organogram() {
   const HierarchyNode = ({ professional, allProfessionals, level }: HierarchyNodeProps) => {
     const [isOpen, setIsOpen] = useState(true);
     
-    // Encontra os subordinados diretos deste profissional
+    // Encontra os subordinados diretos
     const subordinates = allProfessionals
       .filter((p) => p.managerId === professional.id)
       .sort((a, b) => {
@@ -166,12 +126,12 @@ export default function Organogram() {
       ? allProfessionals.filter((p) => 
           professional.managedSquads?.includes(p.squad) && 
           p.id !== professional.id &&
-          !p.managerId // Apenas profissionais sem líder direto já definido
+          !p.managerId
         )
       : [];
 
     const allSubordinates = [...subordinates, ...managedSquadMembers]
-      .filter((p, index, self) => self.findIndex(s => s.id === p.id) === index) // Remove duplicatas
+      .filter((p, index, self) => self.findIndex(s => s.id === p.id) === index)
       .sort((a, b) => {
         const levelA = getHierarchyLevel(a.role || "");
         const levelB = getHierarchyLevel(b.role || "");
@@ -183,14 +143,12 @@ export default function Organogram() {
 
     return (
       <div className="relative">
-        {/* Linha vertical conectando ao líder (se não for o primeiro nível) */}
         {level > 0 && (
           <div className="absolute left-4 top-0 w-px h-4 bg-border" />
         )}
 
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <div className="flex items-start gap-1">
-            {/* Botão para expandir/retrair */}
             {hasSubordinates && (
               <CollapsibleTrigger asChild>
                 <Button
@@ -210,20 +168,7 @@ export default function Organogram() {
 
             {/* Card compacto do profissional */}
             <div className="flex-1 mb-2 max-w-md">
-              <div
-                draggable={canEditProfessionals ? true : false}
-                onDragStart={() => handleDragStart(professional.id)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => {
-                  e.stopPropagation();
-                  handleDropOnProfessional(professional.id);
-                }}
-                className={`
-                  relative rounded-lg border bg-card p-2 shadow-sm cursor-move
-                  transition-all hover:shadow-md hover:border-primary/40
-                  ${draggedProfessionalId === professional.id ? "opacity-50" : ""}
-                `}
-              >
+              <div className="relative rounded-lg border bg-card p-2 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
                 <div className="flex items-center gap-2">
                   {canEditProfessionals && (
                     <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -300,12 +245,10 @@ export default function Organogram() {
           {hasSubordinates && (
             <CollapsibleContent>
               <div className="ml-6 space-y-1 relative">
-                {/* Linha vertical para os subordinados */}
                 <div className="absolute left-4 top-0 bottom-2 w-px bg-border" />
                 
                 {allSubordinates.map((subordinate) => (
                   <div key={subordinate.id} className="relative">
-                    {/* Linha horizontal conectando à linha vertical */}
                     <div className="absolute left-4 top-4 w-4 h-px bg-border" />
                     <HierarchyNode
                       professional={subordinate}
@@ -351,42 +294,53 @@ export default function Organogram() {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteProfessional = (professionalId: string) => {
-    setProfessionals((previous) => previous.filter((professional) => professional.id !== professionalId));
-    toast.success("Profissional removido do organograma.");
+  const handleDeleteProfessional = async (professionalId: string) => {
+    try {
+      await deleteProfessional(professionalId);
+    } catch (error) {
+      // Toast já foi mostrado no hook
+    }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!editingProfessionalId) {
-      const newProfessional: Professional = {
-        id: createId(),
-        ...formData,
-      };
-      setProfessionals((previous) => [...previous, newProfessional]);
-      toast.success("Profissional adicionado ao organograma.");
-    } else {
-      setProfessionals((previous) =>
-        previous.map((professional) =>
-          professional.id === editingProfessionalId ? { ...professional, ...formData } : professional,
-        ),
-      );
-      toast.success("Profissional atualizado no organograma.");
-    }
+    try {
+      if (!editingProfessionalId) {
+        await addProfessional(formData);
+      } else {
+        await updateProfessional(editingProfessionalId, formData);
+      }
 
-    resetForm();
-    setIsDialogOpen(false);
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Toast já foi mostrado no hook
+    }
   };
+
+  // Mostra loading enquanto carrega dados
+  if (loadingProfessionals || loadingSquads || loadingJobRoles) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando organograma...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Organograma por Squad</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Organograma</h1>
             <p className="text-muted-foreground">
-              Visualize a hierarquia, arraste e solte profissionais para reorganizar.
+              Visualize a estrutura organizacional da empresa.
             </p>
           </div>
 
@@ -397,13 +351,11 @@ export default function Organogram() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os squads</SelectItem>
-                {squads
-                  .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-                  .map((squad) => (
-                    <SelectItem key={squad.id} value={squad.id}>
-                      {squad.name}
-                    </SelectItem>
-                  ))}
+                {squads.map((squad) => (
+                  <SelectItem key={squad.id} value={squad.id}>
+                    {squad.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -447,15 +399,22 @@ export default function Organogram() {
               <div className="flex flex-col items-center justify-center h-[300px] text-center">
                 <Users2 className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum profissional encontrado</h3>
-                <p className="text-sm text-muted-foreground max-w-md">
-                  Adicione profissionais ao organograma para visualizar a estrutura hierárquica.
+                <p className="text-sm text-muted-foreground max-w-md mb-4">
+                  Adicione profissionais para visualizar a estrutura hierárquica da organização.
                 </p>
+                {canEditProfessionals && (
+                  <Button onClick={() => setIsDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar primeiro profissional
+                  </Button>
+                )}
               </div>
             )}
           </div>
         </ScrollArea>
       </div>
 
+      {/* Dialog para adicionar/editar profissional */}
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
@@ -467,78 +426,86 @@ export default function Organogram() {
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProfessionalId ? "Editar profissional" : "Adicionar profissional"}</DialogTitle>
+            <DialogTitle>
+              {editingProfessionalId ? "Editar Profissional" : "Adicionar Profissional"}
+            </DialogTitle>
             <DialogDescription>
               Ajuste alocações ou cadastre novos profissionais diretamente no organograma.
             </DialogDescription>
           </DialogHeader>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="organogram-name">Nome completo</Label>
+                <Label htmlFor="professional-name">Nome completo</Label>
                 <Input
-                  id="organogram-name"
-                  placeholder="Nome e sobrenome"
+                  id="professional-name"
+                  placeholder="Nome do profissional"
                   value={formData.name}
-                  onChange={(event) => setFormData((previous) => ({ ...previous, name: event.target.value }))}
+                  onChange={(e) =>
+                    setFormData((previous) => ({ ...previous, name: e.target.value }))
+                  }
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="organogram-email">E-mail</Label>
+                <Label htmlFor="professional-email">E-mail</Label>
                 <Input
-                  id="organogram-email"
+                  id="professional-email"
                   type="email"
-                  placeholder="nome.sobrenome@wk.com.br"
+                  placeholder="email@empresa.com"
                   value={formData.email}
-                  onChange={(event) => setFormData((previous) => ({ ...previous, email: event.target.value }))}
+                  onChange={(e) =>
+                    setFormData((previous) => ({ ...previous, email: e.target.value }))
+                  }
                   required
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="organogram-role">Cargo / Função</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData((previous) => ({ ...previous, role: value }))}
-                >
-                  <SelectTrigger id="organogram-role">
-                    <SelectValue placeholder="Selecione o cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roleOptions.length === 0 ? (
-                      <SelectItem value="no-roles" disabled>
-                        Cadastre cargos e funções para selecionar aqui.
+            <div className="space-y-2">
+              <Label htmlFor="professional-role">Cargo / Função</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) =>
+                  setFormData((previous) => ({ ...previous, role: value }))
+                }
+              >
+                <SelectTrigger id="professional-role">
+                  <SelectValue placeholder="Selecione o cargo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roleOptions.length === 0 ? (
+                    <SelectItem value="no-roles" disabled>
+                      Nenhum cargo cadastrado
+                    </SelectItem>
+                  ) : (
+                    roleOptions.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {role}
                       </SelectItem>
-                    ) : (
-                      roleOptions.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
+            {formData.profileType !== "gestao" && (
               <div className="space-y-2">
-                <Label htmlFor="organogram-squad">Squad Principal</Label>
+                <Label htmlFor="professional-squad">Squad Principal</Label>
                 <Select
                   value={formData.squad}
-                  onValueChange={(value) => setFormData((previous) => ({ ...previous, squad: value }))}
+                  onValueChange={(value) =>
+                    setFormData((previous) => ({ ...previous, squad: value }))
+                  }
                 >
-                  <SelectTrigger id="organogram-squad">
+                  <SelectTrigger id="professional-squad">
                     <SelectValue placeholder="Selecione o squad" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Nenhum Squad">Nenhum Squad</SelectItem>
                     {squadOptions.length === 0 ? (
                       <SelectItem value="no-squads" disabled>
-                        Cadastre squads para disponibilizar nesta lista.
+                        Nenhum squad cadastrado
                       </SelectItem>
                     ) : (
                       squadOptions.map((squadName) => (
@@ -550,16 +517,18 @@ export default function Organogram() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="organogram-seniority">Senioridade</Label>
+                <Label htmlFor="professional-seniority">Senioridade</Label>
                 <Select
                   value={formData.seniority}
-                  onValueChange={(value) => setFormData((previous) => ({ ...previous, seniority: value }))}
+                  onValueChange={(value) =>
+                    setFormData((previous) => ({ ...previous, seniority: value }))
+                  }
                 >
-                  <SelectTrigger id="organogram-seniority">
+                  <SelectTrigger id="professional-seniority">
                     <SelectValue placeholder="Selecione a senioridade" />
                   </SelectTrigger>
                   <SelectContent>
@@ -572,18 +541,19 @@ export default function Organogram() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="organogram-profile">Perfil de atuação</Label>
+                <Label htmlFor="professional-profile">Perfil de atuação</Label>
                 <Select
                   value={formData.profileType}
-                  onValueChange={(value) =>
+                  onValueChange={(value) => {
+                    const newProfileType = value as Professional["profileType"];
                     setFormData((previous) => ({ 
                       ...previous, 
-                      profileType: value as Professional["profileType"],
-                      managedSquads: value !== "gestao" ? [] : previous.managedSquads
-                    }))
-                  }
+                      profileType: newProfileType,
+                      squad: newProfileType === "gestao" ? "" : previous.squad
+                    }));
+                  }}
                 >
-                  <SelectTrigger id="organogram-profile">
+                  <SelectTrigger id="professional-profile">
                     <SelectValue placeholder="Selecione o perfil" />
                   </SelectTrigger>
                   <SelectContent>
@@ -596,36 +566,65 @@ export default function Organogram() {
               </div>
             </div>
 
-            {/* Squads gerenciados - apenas para perfil gestão */}
             {formData.profileType === "gestao" && (
-              <div className="space-y-2 p-4 border border-primary/20 rounded-lg bg-primary/5">
-                <Label className="text-base font-semibold">Squads Gerenciados</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Selecione todos os squads que este profissional irá gerenciar
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {squadOptions.map((squadName) => (
-                    <div key={squadName} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`squad-${squadName}`}
-                        checked={formData.managedSquads?.includes(squadName)}
-                        onCheckedChange={(checked) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            managedSquads: checked
-                              ? [...(prev.managedSquads || []), squadName]
-                              : (prev.managedSquads || []).filter((s) => s !== squadName),
+              <div className="space-y-3 rounded-lg border border-border/60 p-4">
+                <Label>Squads Gerenciados</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="squad-none"
+                      checked={formData.managedSquads?.includes("Nenhum Squad")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData((previous) => ({ 
+                            ...previous, 
+                            managedSquads: ["Nenhum Squad"] 
                           }));
-                        }}
-                      />
-                      <label
-                        htmlFor={`squad-${squadName}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {squadName}
-                      </label>
-                    </div>
-                  ))}
+                        } else {
+                          setFormData((previous) => ({ 
+                            ...previous, 
+                            managedSquads: [] 
+                          }));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="squad-none"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Nenhum Squad
+                    </label>
+                  </div>
+                  {squadOptions
+                    .filter((squadName) => squadName !== "Nenhum Squad")
+                    .map((squadName) => (
+                      <div key={squadName} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`squad-${squadName}`}
+                          checked={formData.managedSquads?.includes(squadName)}
+                          disabled={formData.managedSquads?.includes("Nenhum Squad")}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData((previous) => ({
+                                ...previous,
+                                managedSquads: [...(previous.managedSquads || []), squadName],
+                              }));
+                            } else {
+                              setFormData((previous) => ({
+                                ...previous,
+                                managedSquads: previous.managedSquads?.filter((s) => s !== squadName) || [],
+                              }));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`squad-${squadName}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {squadName}
+                        </label>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -634,7 +633,7 @@ export default function Organogram() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">{editingProfessionalId ? "Salvar alterações" : "Adicionar Profissional"}</Button>
+              <Button type="submit">{editingProfessionalId ? "Salvar alterações" : "Salvar Profissional"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

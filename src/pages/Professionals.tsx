@@ -229,7 +229,7 @@ export default function Professionals() {
                       </SelectTrigger>
                       <SelectContent>
                         {roleOptions.length === 0 ? (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-roles" disabled>
                             Cadastre cargos e funções para selecionar aqui.
                           </SelectItem>
                         ) : (
@@ -256,7 +256,7 @@ export default function Professionals() {
                       </SelectTrigger>
                       <SelectContent>
                         {squadOptions.length === 0 ? (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-squads" disabled>
                             Cadastre squads para disponibilizar nesta lista.
                           </SelectItem>
                         ) : (

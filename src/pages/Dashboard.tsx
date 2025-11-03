@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { KPICard } from "@/components/dashboard/KPICard";
@@ -11,6 +11,14 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState("2025-09");
   const [selectedSquad, setSelectedSquad] = useState("all");
   const [compareWithPrevious, setCompareWithPrevious] = useState(true);
+  const [chartsReady, setChartsReady] = useState(false);
+
+  // Habilita render dos charts após o primeiro paint para evitar travamentos
+  // e reduzir custo de renderização inicial
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setChartsReady(true));
+    return () => window.cancelAnimationFrame(id);
+  }, []);
 
   // Mock data para IR por Squad - memoizado para evitar re-renders
   const irData = useMemo(() => [
@@ -135,21 +143,25 @@ export default function Dashboard() {
             }
             className="w-full"
           >
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={crisisData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                />
-                <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartsReady ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={crisisData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[200px] rounded-md bg-muted/20" />
+            )}
           </KPICard>
         </section>
 
@@ -162,24 +174,28 @@ export default function Dashboard() {
             badge={{ label: "Atenção", variant: "secondary", color: "warning" }}
             className="w-full"
           >
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={irData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="Controladoria" stroke="hsl(var(--chart-3))" strokeWidth={2} isAnimationActive={false} />
-                <Line type="monotone" dataKey="RH" stroke="hsl(var(--chart-1))" strokeWidth={2} isAnimationActive={false} />
-                <Line type="monotone" dataKey="Empresarial" stroke="hsl(var(--chart-2))" strokeWidth={2} isAnimationActive={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartsReady ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={irData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="Controladoria" stroke="hsl(var(--chart-3))" strokeWidth={2} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="RH" stroke="hsl(var(--chart-1))" strokeWidth={2} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="Empresarial" stroke="hsl(var(--chart-2))" strokeWidth={2} isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] rounded-md bg-muted/20" />
+            )}
           </KPICard>
         </section>
 
@@ -191,23 +207,27 @@ export default function Dashboard() {
             subtitle="Bugs e Issues ao longo do tempo"
             className="w-full"
           >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="bugs" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="issues" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartsReady ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="bugs" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="issues" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] rounded-md bg-muted/20" />
+            )}
           </KPICard>
         </section>
 
@@ -265,25 +285,29 @@ export default function Dashboard() {
             badge={{ label: "Melhoria", variant: "secondary", color: "warning" }}
             className="w-full"
           >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={bugScoreData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="score1" stackId="a" fill="hsl(var(--chart-1))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="score2" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="score3" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="score4" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartsReady ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={bugScoreData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="score1" stackId="a" fill="hsl(var(--chart-1))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="score2" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="score3" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="score4" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] rounded-md bg-muted/20" />
+            )}
           </KPICard>
         </section>
 

@@ -113,55 +113,36 @@ export default function Users() {
     setSaving(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+
       if (editingUserId) {
-        // Update existing user
+        // Update existing user via edge function
         toast.info("Atualizando usuário...");
         
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
+        const { data, error } = await supabase.functions.invoke("update-user", {
+          body: {
+            userId: editingUserId,
             full_name: formData.full_name,
             email: formData.email,
-          })
-          .eq("id", editingUserId);
+            is_admin: formData.is_admin,
+          },
+        });
 
-        if (profileError) throw profileError;
+        if (error) throw error;
 
-        const { data: existingRoles } = await supabase
-          .from("user_roles")
-          .select("*")
-          .eq("user_id", editingUserId)
-          .in("role", ["admin", "master"]);
-
-        const hasAdminRole = existingRoles && existingRoles.length > 0;
-
-        if (formData.is_admin && !hasAdminRole) {
-          const { error: roleError } = await supabase
-            .from("user_roles")
-            .insert({ user_id: editingUserId, role: "admin" });
-
-          if (roleError) throw roleError;
-        } else if (!formData.is_admin && hasAdminRole) {
-          const { error: roleError } = await supabase
-            .from("user_roles")
-            .delete()
-            .eq("user_id", editingUserId)
-            .eq("role", "admin");
-
-          if (roleError) throw roleError;
+        if (data?.error) {
+          throw new Error(data.error);
         }
 
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Create new user via edge function
         toast.info("Criando usuário e enviando e-mail...");
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          toast.error("Sessão expirada. Faça login novamente.");
-          return;
-        }
 
         const { data, error } = await supabase.functions.invoke("create-user", {
           body: {

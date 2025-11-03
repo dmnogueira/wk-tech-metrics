@@ -14,8 +14,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignup, setIsSignup] = useState(false);
-  const [fullName, setFullName] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -75,60 +73,6 @@ export default function Login() {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
-        }
-      });
-
-      if (error) throw error;
-
-      // Create profile
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            id: data.user.id,
-            email,
-            full_name: fullName,
-          });
-
-        if (profileError) {
-          console.error("Erro ao criar perfil:", profileError);
-        }
-
-        // Add default user role
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: data.user.id,
-            role: "usuario",
-          });
-
-        if (roleError) {
-          console.error("Erro ao adicionar role:", roleError);
-        }
-      }
-
-      toast.success("Conta criada com sucesso!");
-      setIsSignup(false);
-    } catch (error: any) {
-      console.error("Erro no cadastro:", error);
-      toast.error(error.message || "Erro ao criar conta");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleForgotPassword = async () => {
     if (!resetEmail) {
@@ -204,22 +148,7 @@ export default function Login() {
             </p>
           </div>
 
-          <form onSubmit={isSignup ? handleSignup : handleLogin} className="space-y-4">
-            {isSignup && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nome completo</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Seu nome completo"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="bg-background"
-                />
-              </div>
-            )}
-
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -251,30 +180,16 @@ export default function Login() {
               className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
               disabled={isLoading}
             >
-              {isLoading ? (isSignup ? "Criando conta..." : "Entrando...") : (isSignup ? "Criar conta" : "Entrar")}
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 
-          <div className="mt-4 space-y-2">
-            {!isSignup && (
-              <button
-                onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
-              >
-                Esqueceu sua senha?
-              </button>
-            )}
-            
+          <div className="mt-4">
             <button
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setFullName("");
-                setEmail("");
-                setPassword("");
-              }}
+              onClick={() => setShowForgotPassword(true)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
             >
-              {isSignup ? "Já tem uma conta? Faça login" : "Não tem conta? Cadastre-se"}
+              Esqueceu sua senha?
             </button>
           </div>
         </Card>

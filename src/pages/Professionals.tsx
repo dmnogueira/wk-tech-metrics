@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, UserCircle, Pencil, Trash2, PlusCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -61,7 +62,12 @@ export default function Professionals() {
   });
 
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
-  const squadOptions = useMemo(() => squads.map((squad) => squad.name), [squads]);
+  const squadOptions = useMemo(() => 
+    squads
+      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+      .map((squad) => squad.name), 
+    [squads]
+  );
 
   // Hierarquia de cargos para ordenação
   const hierarchyOrder: Record<string, number> = {
@@ -354,42 +360,51 @@ export default function Professionals() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="professional-squad">Squad</Label>
-                    <Select
-                      value={formData.squad}
-                      onValueChange={(value) =>
-                        setFormData((previous) => ({ ...previous, squad: value }))
-                      }
-                    >
-                      <SelectTrigger id="professional-squad">
-                        <SelectValue placeholder="Selecione o squad" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div
-                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsNewSquadDialogOpen(true);
-                          }}
-                        >
-                          <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-muted-foreground">Adicionar novo squad</span>
-                        </div>
-                        {squadOptions.length === 0 ? (
-                          <SelectItem value="no-squads" disabled>
-                            Nenhum squad cadastrado
-                          </SelectItem>
-                        ) : (
-                          squadOptions.map((squadName) => (
-                            <SelectItem key={squadName} value={squadName}>
-                              {squadName}
+                  {formData.profileType !== "gestao" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="professional-squad">Squad Principal</Label>
+                      <Select
+                        value={formData.squad}
+                        onValueChange={(value) =>
+                          setFormData((previous) => ({ ...previous, squad: value }))
+                        }
+                      >
+                        <SelectTrigger id="professional-squad">
+                          <SelectValue placeholder="Selecione o squad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <div
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsNewSquadDialogOpen(true);
+                            }}
+                          >
+                            <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-muted-foreground">Adicionar novo squad</span>
+                          </div>
+                          <SelectItem value="Nenhum Squad">Nenhum Squad</SelectItem>
+                          {squadOptions.length === 0 ? (
+                            <SelectItem value="no-squads" disabled>
+                              Nenhum squad cadastrado
                             </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                          ) : (
+                            squadOptions
+                              .sort((a, b) => {
+                                const squadA = squads.find(s => s.name === a);
+                                const squadB = squads.find(s => s.name === b);
+                                return (squadA?.order ?? 999) - (squadB?.order ?? 999);
+                              })
+                              .map((squadName) => (
+                                <SelectItem key={squadName} value={squadName}>
+                                  {squadName}
+                                </SelectItem>
+                              ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -446,9 +461,15 @@ export default function Professionals() {
                   <Label htmlFor="professional-profile">Perfil de atuação</Label>
                   <Select
                     value={formData.profileType}
-                    onValueChange={(value) =>
-                      setFormData((previous) => ({ ...previous, profileType: value as Professional["profileType"] }))
-                    }
+                    onValueChange={(value) => {
+                      const newProfileType = value as Professional["profileType"];
+                      setFormData((previous) => ({ 
+                        ...previous, 
+                        profileType: newProfileType,
+                        // Limpar squad se mudar para gestão
+                        squad: newProfileType === "gestao" ? "" : previous.squad
+                      }));
+                    }}
                   >
                     <SelectTrigger id="professional-profile">
                       <SelectValue placeholder="Selecione o perfil" />
@@ -461,6 +482,73 @@ export default function Professionals() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.profileType === "gestao" && (
+                  <div className="space-y-3 rounded-lg border border-border/60 p-4">
+                    <Label>Squads Gerenciados</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="squad-none"
+                          checked={formData.managedSquads?.includes("Nenhum Squad")}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData((previous) => ({ 
+                                ...previous, 
+                                managedSquads: ["Nenhum Squad"] 
+                              }));
+                            } else {
+                              setFormData((previous) => ({ 
+                                ...previous, 
+                                managedSquads: [] 
+                              }));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="squad-none"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Nenhum Squad
+                        </label>
+                      </div>
+                      {squadOptions
+                        .sort((a, b) => {
+                          const squadA = squads.find(s => s.name === a);
+                          const squadB = squads.find(s => s.name === b);
+                          return (squadA?.order ?? 999) - (squadB?.order ?? 999);
+                        })
+                        .map((squadName) => (
+                          <div key={squadName} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`squad-${squadName}`}
+                              checked={formData.managedSquads?.includes(squadName)}
+                              disabled={formData.managedSquads?.includes("Nenhum Squad")}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFormData((previous) => ({
+                                    ...previous,
+                                    managedSquads: [...(previous.managedSquads || []), squadName],
+                                  }));
+                                } else {
+                                  setFormData((previous) => ({
+                                    ...previous,
+                                    managedSquads: previous.managedSquads?.filter((s) => s !== squadName) || [],
+                                  }));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`squad-${squadName}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {squadName}
+                            </label>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -57,7 +57,12 @@ export default function Organogram() {
   const canEditProfessionals = hasPermission(["master", "admin", "gestao"]);
 
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
-  const squadOptions = useMemo(() => squads.map((squad) => squad.name), [squads]);
+  const squadOptions = useMemo(() => 
+    squads
+      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+      .map((squad) => squad.name), 
+    [squads]
+  );
 
   // Hierarquia de cargos para ordenação
   const getHierarchyLevel = (role: string): number => {
@@ -184,7 +189,7 @@ export default function Organogram() {
             {!hasSubordinates && <div className="w-6" />}
 
             {/* Card compacto do profissional */}
-            <div className="flex-1 mb-2">
+            <div className="flex-1 mb-2 max-w-md">
               <div
                 draggable={canEditProfessionals ? true : false}
                 onDragStart={() => handleDragStart(professional.id)}
@@ -372,11 +377,13 @@ export default function Organogram() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os squads</SelectItem>
-                {squads.map((squad) => (
-                  <SelectItem key={squad.id} value={squad.id}>
-                    {squad.name}
-                  </SelectItem>
-                ))}
+                {squads
+                  .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+                  .map((squad) => (
+                    <SelectItem key={squad.id} value={squad.id}>
+                      {squad.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
 
@@ -390,9 +397,10 @@ export default function Organogram() {
         </div>
 
         <ScrollArea className="h-[calc(100vh-220px)] min-h-[420px] rounded-md border border-border/60">
-          <div className="p-4 space-y-4">
+          <div className="p-4">
             {filteredGroups.length > 0 ? (
-              filteredGroups.map((group) => {
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredGroups.map((group) => {
                 // Encontra profissionais sem líder direto (raízes da hierarquia)
                 const rootProfessionals = group.members
                   .filter((p) => !p.managerId || !group.members.find((m) => m.id === p.managerId))
@@ -431,40 +439,27 @@ export default function Organogram() {
                         </Badge>
                       </div>
 
-                      <Tabs defaultValue="estrutura" className="w-full">
-                        <TabsList className="w-full justify-start">
-                          <TabsTrigger value="estrutura">Estrutura Hierárquica</TabsTrigger>
-                          <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="estrutura" className="mt-3">
-                          {group.members.length > 0 ? (
-                            <div className="space-y-1">
-                              {rootProfessionals.map((professional) => (
-                                <HierarchyNode
-                                  key={professional.id}
-                                  professional={professional}
-                                  allProfessionals={group.members}
-                                  level={0}
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground text-center py-8">
-                              Nenhum profissional alocado neste squad.
-                            </p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="detalhes" className="mt-3">
-                          <div className="rounded-lg border border-dashed border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
-                            {group.metadata?.description || "Nenhuma descrição cadastrada para este squad."}
-                          </div>
-                        </TabsContent>
-                      </Tabs>
+                      {group.members.length > 0 ? (
+                        <div className="space-y-1">
+                          {rootProfessionals.map((professional) => (
+                            <HierarchyNode
+                              key={professional.id}
+                              professional={professional}
+                              allProfessionals={group.members}
+                              level={0}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Nenhum profissional alocado neste squad.
+                        </p>
+                      )}
                     </div>
                   </Card>
                 );
-              })
+              })}
+              </div>
             ) : (
               <Card className="p-8 text-center text-muted-foreground">
                 <Users2 className="h-14 w-14 mx-auto mb-4 opacity-50" />
@@ -554,6 +549,7 @@ export default function Organogram() {
                     <SelectValue placeholder="Selecione o squad" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Nenhum Squad">Nenhum Squad</SelectItem>
                     {squadOptions.length === 0 ? (
                       <SelectItem value="no-squads" disabled>
                         Cadastre squads para disponibilizar nesta lista.

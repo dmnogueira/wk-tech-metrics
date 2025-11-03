@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Users, Pencil, Trash2, PlusCircle } from "lucide-react";
+import { Plus, Users, Pencil, Trash2, PlusCircle, GripVertical } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -50,11 +50,13 @@ export default function Squads() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSquadId, setEditingSquadId] = useState<string | null>(null);
   const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
+  const [draggedSquadId, setDraggedSquadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Squad, "id">>({
     name: "",
     area: "",
     description: "",
     managerId: undefined,
+    order: undefined,
   });
   const [isNewManagerDialogOpen, setIsNewManagerDialogOpen] = useState(false);
   const [newManagerData, setNewManagerData] = useState({
@@ -63,6 +65,15 @@ export default function Squads() {
     role: "",
   });
 
+  // Ordena squads por ordem
+  const sortedSquads = useMemo(() => {
+    return [...squads].sort((a, b) => {
+      const orderA = a.order ?? 999;
+      const orderB = b.order ?? 999;
+      return orderA - orderB;
+    });
+  }, [squads]);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -70,9 +81,18 @@ export default function Squads() {
       toast.error("Informe o nome do squad.");
       return;
     }
+
+    // Se não tiver ordem definida, usar o próximo número disponível
+    let finalOrder = formData.order;
+    if (!finalOrder) {
+      const maxOrder = Math.max(0, ...squads.map(s => s.order ?? 0));
+      finalOrder = maxOrder + 1;
+    }
+
     const buildSquad = (base: Omit<Squad, "id">, id?: string): Squad => ({
       id: id ?? createId(),
       ...base,
+      order: finalOrder,
     });
 
     if (editingSquadId) {
@@ -86,7 +106,7 @@ export default function Squads() {
       toast.success("Squad criado com sucesso!");
     }
 
-    setFormData({ name: "", area: "", description: "", managerId: undefined });
+    setFormData({ name: "", area: "", description: "", managerId: undefined, order: undefined });
     setEditingSquadId(null);
     setIsDialogOpen(false);
   };
@@ -98,7 +118,13 @@ export default function Squads() {
   );
 
   const handleEdit = (squad: Squad) => {
-    setFormData({ name: squad.name, area: squad.area, description: squad.description, managerId: squad.managerId });
+    setFormData({ 
+      name: squad.name, 
+      area: squad.area, 
+      description: squad.description, 
+      managerId: squad.managerId,
+      order: squad.order 
+    });
     setEditingSquadId(squad.id);
     setIsDialogOpen(true);
   };
@@ -149,6 +175,56 @@ export default function Squads() {
     }
   };
 
+  const handleDragStart = (squadId: string) => {
+    setDraggedSquadId(squadId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetSquadId: string) => {
+    if (!draggedSquadId || draggedSquadId === targetSquadId) return;
+
+    const draggedSquad = squads.find(s => s.id === draggedSquadId);
+    const targetSquad = squads.find(s => s.id === targetSquadId);
+
+    if (!draggedSquad || !targetSquad) return;
+
+    const draggedOrder = draggedSquad.order ?? 999;
+    const targetOrder = targetSquad.order ?? 999;
+
+    // Troca as ordens
+    setSquads((previous) =>
+      previous.map((squad) => {
+        if (squad.id === draggedSquadId) {
+          return { ...squad, order: targetOrder };
+        }
+        if (squad.id === targetSquadId) {
+          return { ...squad, order: draggedOrder };
+        }
+        return squad;
+      })
+    );
+
+    toast.success("Ordem atualizada!");
+    setDraggedSquadId(null);
+  };
+
+  const handleOrderChange = (squadId: string, newOrder: number) => {
+    if (newOrder <= 0) {
+      toast.error("O campo ordem deve ser maior que zero.");
+      return;
+    }
+
+    setSquads((previous) =>
+      previous.map((squad) =>
+        squad.id === squadId ? { ...squad, order: newOrder } : squad
+      )
+    );
+    toast.success("Ordem atualizada!");
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -163,7 +239,7 @@ export default function Squads() {
             onOpenChange={(open) => {
               setIsDialogOpen(open);
               if (!open) {
-                setFormData({ name: "", area: "", description: "", managerId: undefined });
+                setFormData({ name: "", area: "", description: "", managerId: undefined, order: undefined });
                 setEditingSquadId(null);
               }
             }}
@@ -207,6 +283,26 @@ export default function Squads() {
                       setFormData((previous) => ({ ...previous, area: event.target.value }))
                     }
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="squad-order">Ordem de exibição</Label>
+                  <Input
+                    id="squad-order"
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 1"
+                    value={formData.order ?? ""}
+                    onChange={(event) =>
+                      setFormData((previous) => ({ 
+                        ...previous, 
+                        order: event.target.value ? parseInt(event.target.value) : undefined 
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Define a ordem de exibição nos comboboxes. Se deixar vazio, será adicionado ao final.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -337,11 +433,13 @@ export default function Squads() {
           </Dialog>
         </div>
 
-        {squads.length > 0 ? (
+        {sortedSquads.length > 0 ? (
           <Card className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="w-[80px]">Ordem</TableHead>
                   <TableHead>Squad</TableHead>
                   <TableHead>Área</TableHead>
                   <TableHead>Gestão</TableHead>
@@ -350,8 +448,28 @@ export default function Squads() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {squads.map((squad) => (
-                  <TableRow key={squad.id}>
+                {sortedSquads.map((squad) => (
+                  <TableRow 
+                    key={squad.id}
+                    draggable
+                    onDragStart={() => handleDragStart(squad.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(squad.id)}
+                    className={`cursor-move ${draggedSquadId === squad.id ? 'opacity-50' : ''}`}
+                  >
+                    <TableCell>
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={squad.order ?? ""}
+                        onChange={(e) => handleOrderChange(squad.id, parseInt(e.target.value))}
+                        className="w-16 h-8"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium text-foreground">{squad.name}</TableCell>
                     <TableCell>
                       {squad.area ? (

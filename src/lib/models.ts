@@ -6,6 +6,7 @@ export interface Squad {
   area: string;
   description: string;
   managerId?: string;
+  order?: number;
 }
 
 export interface Professional {

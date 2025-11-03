@@ -54,7 +54,14 @@ export default function Login() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+      if (event === "PASSWORD_RECOVERY" && session) {
+        setShowForgotPassword(false);
+        setShowChangePassword(true);
+        const recoveredEmail = session.user.email ?? "";
+        if (recoveredEmail) {
+          setEmail(recoveredEmail);
+        }
+      } else if (event === "SIGNED_IN" && session) {
         if (session.user.user_metadata?.must_change_password) {
           setShowChangePassword(true);
         } else {
@@ -94,14 +101,16 @@ export default function Login() {
 
 
   const handleForgotPassword = async () => {
-    if (!resetEmail) {
+    const emailToReset = resetEmail.trim() || email.trim();
+
+    if (!emailToReset) {
       toast.error("Digite seu e-mail");
       return;
     }
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
         redirectTo: `${window.location.origin}/login`,
       });
 
@@ -206,7 +215,11 @@ export default function Login() {
 
           <div className="mt-4">
             <button
-              onClick={() => setShowForgotPassword(true)}
+              type="button"
+              onClick={() => {
+                setResetEmail(email);
+                setShowForgotPassword(true);
+              }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
             >
               Esqueceu sua senha?
@@ -216,7 +229,17 @@ export default function Login() {
       </div>
 
       {/* Forgot Password Dialog */}
-      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+      <Dialog
+        open={showForgotPassword}
+        onOpenChange={(open) => {
+          setShowForgotPassword(open);
+          if (open) {
+            setResetEmail((previous) => previous || email);
+          } else {
+            setResetEmail("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Recuperar senha</DialogTitle>

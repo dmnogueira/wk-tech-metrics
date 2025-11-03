@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Users, Pencil, Trash2 } from "lucide-react";
+import { Plus, Users, Pencil, Trash2, PlusCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +46,7 @@ const createId = () =>
 
 export default function Squads() {
   const [squads, setSquads] = useLocalStorage<Squad[]>("squads", []);
-  const [professionals] = useLocalStorage<Professional[]>("professionals", []);
+  const [professionals, setProfessionals] = useLocalStorage<Professional[]>("professionals", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSquadId, setEditingSquadId] = useState<string | null>(null);
   const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
@@ -55,6 +55,12 @@ export default function Squads() {
     area: "",
     description: "",
     managerId: undefined,
+  });
+  const [isNewManagerDialogOpen, setIsNewManagerDialogOpen] = useState(false);
+  const [newManagerData, setNewManagerData] = useState({
+    name: "",
+    email: "",
+    role: "",
   });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -95,6 +101,44 @@ export default function Squads() {
     setFormData({ name: squad.name, area: squad.area, description: squad.description, managerId: squad.managerId });
     setEditingSquadId(squad.id);
     setIsDialogOpen(true);
+  };
+
+  const handleCreateNewManager = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedName = newManagerData.name.trim();
+    const trimmedEmail = newManagerData.email.trim();
+    const trimmedRole = newManagerData.role.trim();
+
+    if (!trimmedName || !trimmedEmail) {
+      toast.error("Informe nome e e-mail do gestor.");
+      return;
+    }
+
+    const alreadyExists = professionals.some(
+      (professional) => professional.email.toLowerCase() === trimmedEmail.toLowerCase(),
+    );
+
+    if (alreadyExists) {
+      toast.error("Já existe um profissional cadastrado com este e-mail.");
+      return;
+    }
+
+    const newManager: Professional = {
+      id: createId(),
+      name: trimmedName,
+      email: trimmedEmail,
+      role: trimmedRole || "Gestor",
+      squad: "",
+      seniority: "Pleno",
+      profileType: "gestao",
+    };
+
+    setProfessionals((previous) => [...previous, newManager]);
+    setFormData((previous) => ({ ...previous, managerId: newManager.id }));
+    setIsNewManagerDialogOpen(false);
+    setNewManagerData({ name: "", email: "", role: "" });
+    toast.success("Gestor cadastrado com sucesso!");
   };
 
   const confirmDelete = () => {
@@ -177,6 +221,16 @@ export default function Squads() {
                       <SelectValue placeholder="Selecione o responsável pela gestão" />
                     </SelectTrigger>
                     <SelectContent>
+                      <div
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setIsNewManagerDialogOpen(true);
+                        }}
+                      >
+                        <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Adicionar novo gestor</span>
+                      </div>
                       {managers.length === 0 ? (
                         <SelectItem value="no-managers" disabled>
                           Cadastre profissionais com perfil de gestão para selecionar aqui.
@@ -210,6 +264,73 @@ export default function Squads() {
                     Cancelar
                   </Button>
                   <Button type="submit">{editingSquadId ? "Salvar alterações" : "Salvar Squad"}</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={isNewManagerDialogOpen}
+            onOpenChange={(open) => {
+              setIsNewManagerDialogOpen(open);
+              if (!open) {
+                setNewManagerData({ name: "", email: "", role: "" });
+              }
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar novo gestor</DialogTitle>
+                <DialogDescription>
+                  Cadastre rapidamente o responsável pela gestão deste squad.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleCreateNewManager} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-manager-name">Nome completo</Label>
+                  <Input
+                    id="new-manager-name"
+                    placeholder="Ex: Ana Oliveira"
+                    value={newManagerData.name}
+                    onChange={(event) =>
+                      setNewManagerData((previous) => ({ ...previous, name: event.target.value }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-manager-email">E-mail</Label>
+                  <Input
+                    id="new-manager-email"
+                    type="email"
+                    placeholder="nome.sobrenome@wk.com.br"
+                    value={newManagerData.email}
+                    onChange={(event) =>
+                      setNewManagerData((previous) => ({ ...previous, email: event.target.value }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-manager-role">Cargo / Função</Label>
+                  <Input
+                    id="new-manager-role"
+                    placeholder="Ex: Head de Tecnologia"
+                    value={newManagerData.role}
+                    onChange={(event) =>
+                      setNewManagerData((previous) => ({ ...previous, role: event.target.value }))
+                    }
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsNewManagerDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Adicionar gestor</Button>
                 </DialogFooter>
               </form>
             </DialogContent>

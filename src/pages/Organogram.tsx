@@ -168,8 +168,8 @@ export default function Organogram() {
           </div>
         </div>
 
-        <ScrollArea className="max-h-[70vh] rounded-md border border-border/60">
-          <div className="p-6 space-y-6">
+        <ScrollArea className="h-[calc(100vh-220px)] min-h-[420px] rounded-md border border-border/60">
+          <div className="p-6 pr-4 space-y-6">
             {filteredGroups.length > 0 ? (
               filteredGroups.map((group) => {
                 const manager = group.metadata?.managerId

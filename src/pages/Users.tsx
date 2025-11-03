@@ -3,7 +3,6 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Shield, Pencil, Trash2, RotateCcw, Loader2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -29,6 +28,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { getCurrentUserRole } from "@/lib/auth";
+import { Switch } from "@/components/ui/switch";
 
 interface ManagedUser {
   id: string;
@@ -400,17 +400,23 @@ export default function Users() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-border/50 bg-muted/30 px-4 py-3">
+                <div className="space-y-1">
+                  <Label htmlFor="is-admin" className="text-sm font-medium text-foreground">
+                    Usuário Administrador
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Concede acesso total às configurações do sistema.
+                  </p>
+                </div>
+                <Switch
                   id="is-admin"
                   checked={formData.is_admin}
                   onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, is_admin: checked as boolean }))
+                    setFormData((prev) => ({ ...prev, is_admin: Boolean(checked) }))
                   }
+                  aria-label="Alternar perfil de administrador"
                 />
-                <Label htmlFor="is-admin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Usuário Administrador
-                </Label>
               </div>
 
               <DialogFooter>

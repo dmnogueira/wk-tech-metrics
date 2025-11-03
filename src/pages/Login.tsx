@@ -20,6 +20,25 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Validador de senha forte
+  const validatePassword = (pw: string, userEmail?: string) => {
+    const common = new Set([
+      "123456","password","123456789","qwerty","111111","12345678","abc123","password1","1234567","iloveyou","admin","welcome","monkey","dragon","letmein","football","baseball","123123","qwerty123","1q2w3e4r","zaq12wsx","password123","qazwsx","secret","login","princess","sunshine","solo","starwars","passw0rd"
+    ]);
+    if (pw.length < 12) return { ok: false, message: "A senha deve ter pelo menos 12 caracteres" };
+    const hasLower = /[a-z]/.test(pw);
+    const hasUpper = /[A-Z]/.test(pw);
+    const hasNumber = /\d/.test(pw);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pw);
+    if (!(hasLower && hasUpper && hasNumber && hasSpecial)) return { ok: false, message: "A senha deve conter letras maiúsculas, minúsculas, números e símbolos" };
+    if (common.has(pw.toLowerCase())) return { ok: false, message: "Senha muito comum; escolha outra" };
+    if (userEmail) {
+      const local = userEmail.split("@")[0];
+      if (local && pw.toLowerCase().includes(local.toLowerCase())) return { ok: false, message: "A senha não pode conter seu e-mail" };
+    }
+    return { ok: true };
+  };
+
   useEffect(() => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -105,8 +124,9 @@ export default function Login() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    const strength = validatePassword(newPassword, email);
+    if (!strength.ok) {
+      toast.error(strength.message || "Senha fraca. Tente outra.");
       return;
     }
 
@@ -233,7 +253,7 @@ export default function Login() {
           <DialogHeader>
             <DialogTitle>Alterar senha obrigatória</DialogTitle>
             <DialogDescription>
-              Por segurança, você deve alterar sua senha temporária antes de continuar.
+              Por segurança, você deve alterar sua senha temporária antes de continuar. Requisitos: mínimo de 12 caracteres, com maiúsculas, minúsculas, números e símbolos.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

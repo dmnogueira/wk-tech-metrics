@@ -76,29 +76,31 @@ export default function Organogram() {
     return 5; // profissionais comuns
   };
 
-  // Estrutura de árvore hierárquica por squad
-  const groupedProfessionals = useMemo(() => {
-    const grouping = new Map<string, Professional[]>();
-    professionals.forEach((professional) => {
-      const groupKey = professional.squad || "Sem squad";
-      const existing = grouping.get(groupKey) ?? [];
-      existing.push(professional);
-      grouping.set(groupKey, existing);
-    });
-
-    return Array.from(grouping.entries()).map(([group, members]) => ({
-      squadName: group,
-      members,
-      metadata: squads.find((squad) => squad.name === group) ?? null,
-    }));
-  }, [professionals, squads]);
-
-  const filteredGroups = groupedProfessionals.filter((group) => {
-    if (selectedSquadId === "all") {
-      return true;
+  // Estrutura hierárquica respeitando a ordem: Diretor > Gerente > Coordenador > Squad > Profissionais
+  const hierarchicalProfessionals = useMemo(() => {
+    // Filtra profissionais baseado no squad selecionado
+    let filteredPros = professionals;
+    if (selectedSquadId !== "all") {
+      const selectedSquad = squads.find((s) => s.id === selectedSquadId);
+      if (selectedSquad) {
+        filteredPros = professionals.filter((p) => 
+          p.squad === selectedSquad.name || p.managedSquads?.includes(selectedSquad.name)
+        );
+      }
     }
-    return group.metadata?.id === selectedSquadId;
-  });
+
+    // Encontra profissionais raiz (sem managerId ou managerId não existe mais)
+    const rootProfessionals = filteredPros
+      .filter((p) => !p.managerId || !filteredPros.find((m) => m.id === p.managerId))
+      .sort((a, b) => {
+        const levelA = getHierarchyLevel(a.role || "");
+        const levelB = getHierarchyLevel(b.role || "");
+        if (levelA !== levelB) return levelA - levelB;
+        return a.name.localeCompare(b.name);
+      });
+
+    return { allProfessionals: filteredPros, rootProfessionals };
+  }, [professionals, squads, selectedSquadId]);
 
   // Drag and Drop handlers
   const handleDragStart = (professionalId: string) => {
@@ -159,7 +161,25 @@ export default function Organogram() {
         return a.name.localeCompare(b.name);
       });
 
-    const hasSubordinates = subordinates.length > 0;
+    // Para perfis de gestão, também inclui os profissionais dos squads gerenciados
+    const managedSquadMembers = professional.profileType === "gestao" && professional.managedSquads
+      ? allProfessionals.filter((p) => 
+          professional.managedSquads?.includes(p.squad) && 
+          p.id !== professional.id &&
+          !p.managerId // Apenas profissionais sem líder direto já definido
+        )
+      : [];
+
+    const allSubordinates = [...subordinates, ...managedSquadMembers]
+      .filter((p, index, self) => self.findIndex(s => s.id === p.id) === index) // Remove duplicatas
+      .sort((a, b) => {
+        const levelA = getHierarchyLevel(a.role || "");
+        const levelB = getHierarchyLevel(b.role || "");
+        if (levelA !== levelB) return levelA - levelB;
+        return a.name.localeCompare(b.name);
+      });
+
+    const hasSubordinates = allSubordinates.length > 0;
 
     return (
       <div className="relative">
@@ -283,7 +303,7 @@ export default function Organogram() {
                 {/* Linha vertical para os subordinados */}
                 <div className="absolute left-4 top-0 bottom-2 w-px bg-border" />
                 
-                {subordinates.map((subordinate) => (
+                {allSubordinates.map((subordinate) => (
                   <div key={subordinate.id} className="relative">
                     {/* Linha horizontal conectando à linha vertical */}
                     <div className="absolute left-4 top-4 w-4 h-px bg-border" />
@@ -398,73 +418,39 @@ export default function Organogram() {
 
         <ScrollArea className="h-[calc(100vh-220px)] min-h-[420px] rounded-md border border-border/60">
           <div className="p-4">
-            {filteredGroups.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredGroups.map((group) => {
-                // Encontra profissionais sem líder direto (raízes da hierarquia)
-                const rootProfessionals = group.members
-                  .filter((p) => !p.managerId || !group.members.find((m) => m.id === p.managerId))
-                  .sort((a, b) => {
-                    const levelA = getHierarchyLevel(a.role || "");
-                    const levelB = getHierarchyLevel(b.role || "");
-                    if (levelA !== levelB) return levelA - levelB;
-                    return a.name.localeCompare(b.name);
-                  });
+            {hierarchicalProfessionals.rootProfessionals.length > 0 ? (
+              <Card className="border-border/60">
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Users2 className="h-6 w-6 text-primary" />
+                    <h2 className="text-2xl font-semibold text-foreground">
+                      Estrutura Organizacional
+                    </h2>
+                    <Badge variant="outline" className="text-muted-foreground ml-auto">
+                      {hierarchicalProfessionals.allProfessionals.length} {hierarchicalProfessionals.allProfessionals.length === 1 ? "pessoa" : "pessoas"}
+                    </Badge>
+                  </div>
 
-                return (
-                  <Card
-                    key={group.metadata?.id ?? group.squadName}
-                    className="border-border/60"
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      handleDropOnSquad(group.squadName);
-                    }}
-                  >
-                    <div className="p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Users2 className="h-5 w-5 text-primary" />
-                          <h2 className="text-xl font-semibold text-foreground">
-                            {group.squadName}
-                          </h2>
-                          {group.metadata?.area && (
-                            <Badge variant="outline" className="border-secondary/30 text-secondary">
-                              {group.metadata.area}
-                            </Badge>
-                          )}
-                        </div>
-                        <Badge variant="outline" className="text-muted-foreground">
-                          {group.members.length} {group.members.length === 1 ? "pessoa" : "pessoas"}
-                        </Badge>
-                      </div>
-
-                      {group.members.length > 0 ? (
-                        <div className="space-y-1">
-                          {rootProfessionals.map((professional) => (
-                            <HierarchyNode
-                              key={professional.id}
-                              professional={professional}
-                              allProfessionals={group.members}
-                              level={0}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground text-center py-8">
-                          Nenhum profissional alocado neste squad.
-                        </p>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
-              </div>
-            ) : (
-              <Card className="p-8 text-center text-muted-foreground">
-                <Users2 className="h-14 w-14 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">Nenhum squad encontrado para o filtro selecionado.</p>
+                  <div className="space-y-2">
+                    {hierarchicalProfessionals.rootProfessionals.map((professional) => (
+                      <HierarchyNode
+                        key={professional.id}
+                        professional={professional}
+                        allProfessionals={hierarchicalProfessionals.allProfessionals}
+                        level={0}
+                      />
+                    ))}
+                  </div>
+                </div>
               </Card>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[300px] text-center">
+                <Users2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum profissional encontrado</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Adicione profissionais ao organograma para visualizar a estrutura hierárquica.
+                </p>
+              </div>
             )}
           </div>
         </ScrollArea>

@@ -322,89 +322,87 @@ export default function Professionals() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="professional-role">Cargo / Função</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) =>
+                      setFormData((previous) => ({ ...previous, role: value }))
+                    }
+                  >
+                    <SelectTrigger id="professional-role">
+                      <SelectValue placeholder="Selecione o cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsNewRoleDialogOpen(true);
+                        }}
+                      >
+                        <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Adicionar novo cargo</span>
+                      </div>
+                      {roleOptions.length === 0 ? (
+                        <SelectItem value="no-roles" disabled>
+                          Nenhum cargo cadastrado
+                        </SelectItem>
+                      ) : (
+                        roleOptions.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {role}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.profileType !== "gestao" && (
                   <div className="space-y-2">
-                    <Label htmlFor="professional-role">Cargo / Função</Label>
+                    <Label htmlFor="professional-squad">Squad Principal</Label>
                     <Select
-                      value={formData.role}
+                      value={formData.squad}
                       onValueChange={(value) =>
-                        setFormData((previous) => ({ ...previous, role: value }))
+                        setFormData((previous) => ({ ...previous, squad: value }))
                       }
                     >
-                      <SelectTrigger id="professional-role">
-                        <SelectValue placeholder="Selecione o cargo" />
+                      <SelectTrigger id="professional-squad">
+                        <SelectValue placeholder="Selecione o squad" />
                       </SelectTrigger>
                       <SelectContent>
                         <div
                           className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsNewRoleDialogOpen(true);
+                            setIsNewSquadDialogOpen(true);
                           }}
                         >
                           <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-muted-foreground">Adicionar novo cargo</span>
+                          <span className="text-muted-foreground">Adicionar novo squad</span>
                         </div>
-                        {roleOptions.length === 0 ? (
-                          <SelectItem value="no-roles" disabled>
-                            Nenhum cargo cadastrado
+                        {squadOptions.length === 0 ? (
+                          <SelectItem value="no-squads" disabled>
+                            Nenhum squad cadastrado
                           </SelectItem>
                         ) : (
-                          roleOptions.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
-                            </SelectItem>
-                          ))
+                          squadOptions
+                            .sort((a, b) => {
+                              const squadA = squads.find(s => s.name === a);
+                              const squadB = squads.find(s => s.name === b);
+                              return (squadA?.order ?? 999) - (squadB?.order ?? 999);
+                            })
+                            .map((squadName) => (
+                              <SelectItem key={squadName} value={squadName}>
+                                {squadName}
+                              </SelectItem>
+                            ))
                         )}
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {formData.profileType !== "gestao" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="professional-squad">Squad Principal</Label>
-                      <Select
-                        value={formData.squad}
-                        onValueChange={(value) =>
-                          setFormData((previous) => ({ ...previous, squad: value }))
-                        }
-                      >
-                        <SelectTrigger id="professional-squad">
-                          <SelectValue placeholder="Selecione o squad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <div
-                            className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsNewSquadDialogOpen(true);
-                            }}
-                          >
-                            <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-muted-foreground">Adicionar novo squad</span>
-                          </div>
-                          {squadOptions.length === 0 ? (
-                            <SelectItem value="no-squads" disabled>
-                              Nenhum squad cadastrado
-                            </SelectItem>
-                          ) : (
-                            squadOptions
-                              .sort((a, b) => {
-                                const squadA = squads.find(s => s.name === a);
-                                const squadB = squads.find(s => s.name === b);
-                                return (squadA?.order ?? 999) - (squadB?.order ?? 999);
-                              })
-                              .map((squadName) => (
-                                <SelectItem key={squadName} value={squadName}>
-                                  {squadName}
-                                </SelectItem>
-                              ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="professional-manager">Liderança Imediata</Label>

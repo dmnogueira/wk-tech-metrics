@@ -164,7 +164,7 @@ export default function Squads() {
                     </SelectTrigger>
                     <SelectContent>
                       {managers.length === 0 ? (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-managers" disabled>
                           Cadastre profissionais com perfil de gestão para selecionar aqui.
                         </SelectItem>
                       ) : (

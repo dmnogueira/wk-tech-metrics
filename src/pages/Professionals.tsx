@@ -273,78 +273,76 @@ export default function Professionals() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="professional-role">Cargo / Função</Label>
-                    <div className="flex gap-2">
-                      <Select
-                        value={formData.role}
-                        onValueChange={(value) =>
-                          setFormData((previous) => ({ ...previous, role: value }))
-                        }
-                      >
-                        <SelectTrigger id="professional-role" className="flex-1">
-                          <SelectValue placeholder="Selecione o cargo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roleOptions.length === 0 ? (
-                            <SelectItem value="no-roles" disabled>
-                              Cadastre cargos e funções para selecionar aqui.
+                    <Select
+                      value={formData.role}
+                      onValueChange={(value) =>
+                        setFormData((previous) => ({ ...previous, role: value }))
+                      }
+                    >
+                      <SelectTrigger id="professional-role">
+                        <SelectValue placeholder="Selecione o cargo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div
+                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsNewRoleDialogOpen(true);
+                          }}
+                        >
+                          <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-muted-foreground">Adicionar novo cargo</span>
+                        </div>
+                        {roleOptions.length === 0 ? (
+                          <SelectItem value="no-roles" disabled>
+                            Nenhum cargo cadastrado
+                          </SelectItem>
+                        ) : (
+                          roleOptions.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {role}
                             </SelectItem>
-                          ) : (
-                            roleOptions.map((role) => (
-                              <SelectItem key={role} value={role}>
-                                {role}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setIsNewRoleDialogOpen(true)}
-                        title="Adicionar novo cargo"
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="professional-squad">Squad</Label>
-                    <div className="flex gap-2">
-                      <Select
-                        value={formData.squad}
-                        onValueChange={(value) =>
-                          setFormData((previous) => ({ ...previous, squad: value }))
-                        }
-                      >
-                        <SelectTrigger id="professional-squad" className="flex-1">
-                          <SelectValue placeholder="Selecione o squad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {squadOptions.length === 0 ? (
-                            <SelectItem value="no-squads" disabled>
-                              Cadastre squads para disponibilizar nesta lista.
+                    <Select
+                      value={formData.squad}
+                      onValueChange={(value) =>
+                        setFormData((previous) => ({ ...previous, squad: value }))
+                      }
+                    >
+                      <SelectTrigger id="professional-squad">
+                        <SelectValue placeholder="Selecione o squad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div
+                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsNewSquadDialogOpen(true);
+                          }}
+                        >
+                          <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-muted-foreground">Adicionar novo squad</span>
+                        </div>
+                        {squadOptions.length === 0 ? (
+                          <SelectItem value="no-squads" disabled>
+                            Nenhum squad cadastrado
+                          </SelectItem>
+                        ) : (
+                          squadOptions.map((squadName) => (
+                            <SelectItem key={squadName} value={squadName}>
+                              {squadName}
                             </SelectItem>
-                          ) : (
-                            squadOptions.map((squadName) => (
-                              <SelectItem key={squadName} value={squadName}>
-                                {squadName}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setIsNewSquadDialogOpen(true)}
-                        title="Adicionar novo squad"
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

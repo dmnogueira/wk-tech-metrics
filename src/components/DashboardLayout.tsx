@@ -45,11 +45,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Button>
               </Link>
               <Link to="/import">
-                <Button 
-                  variant={location.pathname === "/import" ? "secondary" : "ghost"} 
+                <Button
+                  variant={location.pathname === "/import" ? "secondary" : "ghost"}
                   size="sm"
                 >
                   Importar Métricas
+                </Button>
+              </Link>
+              <Link to="/organogram">
+                <Button
+                  variant={location.pathname === "/organogram" ? "secondary" : "ghost"}
+                  size="sm"
+                >
+                  Organograma
                 </Button>
               </Link>
               <DropdownMenu>
@@ -64,6 +72,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/professionals" className="cursor-pointer">Profissionais</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/job-roles" className="cursor-pointer">Cargos e Funções</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/users" className="cursor-pointer">Usuários</Link>

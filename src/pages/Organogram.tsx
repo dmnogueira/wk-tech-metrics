@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pencil, Trash2, Users2, UserCog } from "lucide-react";
+import { Pencil, Trash2, Users2, UserCog, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { hasPermission } from "@/lib/auth";
@@ -55,6 +56,19 @@ export default function Organogram() {
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
   const squadOptions = useMemo(() => squads.map((squad) => squad.name), [squads]);
 
+  // Hierarquia de cargos para ordenação
+  const getHierarchyLevel = (role: string): number => {
+    const normalizedRole = role.toLowerCase().trim();
+    
+    if (normalizedRole.includes("diretor")) return 1;
+    if (normalizedRole.includes("gerente") || normalizedRole.includes("gerencia")) return 2;
+    if (normalizedRole.includes("coordenador") || normalizedRole.includes("coordenacao")) return 3;
+    if (normalizedRole.includes("squad") || normalizedRole.includes("tech lead") || normalizedRole.includes("lead")) return 4;
+    
+    return 5; // profissionais comuns
+  };
+
+  // Estrutura de árvore hierárquica por squad
   const groupedProfessionals = useMemo(() => {
     const grouping = new Map<string, Professional[]>();
     professionals.forEach((professional) => {
@@ -77,6 +91,141 @@ export default function Organogram() {
     }
     return group.metadata?.id === selectedSquadId;
   });
+
+  // Componente para renderizar um profissional e seus subordinados
+  interface HierarchyNodeProps {
+    professional: Professional;
+    allProfessionals: Professional[];
+    level: number;
+  }
+
+  const HierarchyNode = ({ professional, allProfessionals, level }: HierarchyNodeProps) => {
+    const [isOpen, setIsOpen] = useState(true);
+    
+    // Encontra os subordinados diretos deste profissional
+    const subordinates = allProfessionals
+      .filter((p) => p.managerId === professional.id)
+      .sort((a, b) => {
+        const levelA = getHierarchyLevel(a.role || "");
+        const levelB = getHierarchyLevel(b.role || "");
+        if (levelA !== levelB) return levelA - levelB;
+        return a.name.localeCompare(b.name);
+      });
+
+    const hasSubordinates = subordinates.length > 0;
+
+    return (
+      <div className="relative">
+        {/* Linha vertical conectando ao líder (se não for o primeiro nível) */}
+        {level > 0 && (
+          <div className="absolute left-6 top-0 w-px h-6 bg-border" />
+        )}
+
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="flex items-start gap-2">
+            {/* Botão para expandir/retrair */}
+            {hasSubordinates && (
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 mt-2"
+                >
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            )}
+            {!hasSubordinates && <div className="w-8" />}
+
+            {/* Card do profissional */}
+            <div className="flex-1 mb-4">
+              <div className="relative rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm backdrop-blur-sm">
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-12 w-12 border-2 border-primary/60">
+                    <AvatarImage src={professional.avatar} alt={professional.name} />
+                    <AvatarFallback>
+                      {professional.name
+                        .split(" ")
+                        .map((part) => part.charAt(0))
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground">{professional.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {professional.role || "Função não definida"}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge variant="outline" className="border-info/40 text-info">
+                        {professional.seniority}
+                      </Badge>
+                      <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
+                        {professional.profileType === "gestao"
+                          ? "Gestão"
+                          : professional.profileType === "especialista"
+                            ? "Especialista"
+                            : professional.profileType === "admin"
+                              ? "Admin"
+                              : "Colaborador"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {canEditProfessionals && (
+                  <div className="mt-4 flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditProfessional(professional)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteProfessional(professional.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Subordinados */}
+          {hasSubordinates && (
+            <CollapsibleContent>
+              <div className="ml-8 space-y-2 relative">
+                {/* Linha vertical para os subordinados */}
+                <div className="absolute left-6 top-0 bottom-4 w-px bg-border" />
+                
+                {subordinates.map((subordinate) => (
+                  <div key={subordinate.id} className="relative">
+                    {/* Linha horizontal conectando à linha vertical */}
+                    <div className="absolute left-6 top-8 w-6 h-px bg-border" />
+                    <HierarchyNode
+                      professional={subordinate}
+                      allProfessionals={allProfessionals}
+                      level={level + 1}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          )}
+        </Collapsible>
+      </div>
+    );
+  };
 
   const resetForm = () => {
     setFormData({
@@ -172,9 +321,15 @@ export default function Organogram() {
           <div className="p-6 pr-4 space-y-6">
             {filteredGroups.length > 0 ? (
               filteredGroups.map((group) => {
-                const manager = group.metadata?.managerId
-                  ? professionals.find((professional) => professional.id === group.metadata?.managerId)
-                  : null;
+                // Encontra profissionais sem líder direto (raízes da hierarquia)
+                const rootProfessionals = group.members
+                  .filter((p) => !p.managerId || !group.members.find((m) => m.id === p.managerId))
+                  .sort((a, b) => {
+                    const levelA = getHierarchyLevel(a.role || "");
+                    const levelB = getHierarchyLevel(b.role || "");
+                    if (levelA !== levelB) return levelA - levelB;
+                    return a.name.localeCompare(b.name);
+                  });
 
                 return (
                   <Card key={group.metadata?.id ?? group.squadName} className="border-border/60">
@@ -191,89 +346,23 @@ export default function Organogram() {
                             </Badge>
                           )}
                         </div>
-
-                        {manager && (
-                          <div className="flex items-center gap-3 bg-muted/40 rounded-full px-4 py-2">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={manager.avatar} alt={manager.name} />
-                              <AvatarFallback>
-                                {manager.name
-                                  .split(" ")
-                                  .map((part) => part.charAt(0))
-                                  .join("")
-                                  .toUpperCase()
-                                  .slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">{manager.name}</p>
-                              <p className="text-xs text-muted-foreground">Gestão do squad</p>
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       <Tabs defaultValue="estrutura" className="w-full">
                         <TabsList className="w-full justify-start">
-                          <TabsTrigger value="estrutura">Estrutura</TabsTrigger>
+                          <TabsTrigger value="estrutura">Estrutura Hierárquica</TabsTrigger>
                           <TabsTrigger value="detalhes">Detalhes do squad</TabsTrigger>
                         </TabsList>
                         <TabsContent value="estrutura" className="mt-4">
                           {group.members.length > 0 ? (
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                              {group.members.map((member) => (
-                                <div
-                                  key={member.id}
-                                  className="relative rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm backdrop-blur-sm"
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <Avatar className="h-12 w-12 border-2 border-primary/60">
-                                      <AvatarImage src={member.avatar} alt={member.name} />
-                                      <AvatarFallback>
-                                        {member.name
-                                          .split(" ")
-                                          .map((part) => part.charAt(0))
-                                          .join("")
-                                          .toUpperCase()
-                                          .slice(0, 2)}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                      <p className="font-semibold text-foreground">{member.name}</p>
-                                      <p className="text-sm text-muted-foreground">{member.role || "Função não definida"}</p>
-                                      <div className="mt-2 flex flex-wrap gap-2">
-                                        <Badge variant="outline" className="border-info/40 text-info">
-                                          {member.seniority}
-                                        </Badge>
-                                        <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
-                                          {member.profileType === "gestao"
-                                            ? "Gestão"
-                                            : member.profileType === "especialista"
-                                              ? "Especialista"
-                                              : member.profileType === "admin"
-                                                ? "Admin"
-                                                : "Colaborador"}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {canEditProfessionals && (
-                                    <div className="mt-4 flex items-center justify-end gap-2">
-                                      <Button variant="ghost" size="icon" onClick={() => handleEditProfessional(member)}>
-                                        <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDeleteProfessional(member.id)}
-                                        className="text-destructive hover:text-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
+                            <div className="space-y-2">
+                              {rootProfessionals.map((professional) => (
+                                <HierarchyNode
+                                  key={professional.id}
+                                  professional={professional}
+                                  allProfessionals={group.members}
+                                  level={0}
+                                />
                               ))}
                             </div>
                           ) : (

@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { hasPermission } from "@/lib/auth";
+import { getCurrentUserRole } from "@/lib/auth";
 
 interface ManagedUser {
   id: string;
@@ -44,17 +44,22 @@ export default function Users() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [canManageUsers, setCanManageUsers] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
     is_admin: false,
   });
 
-  const canManageUsers = hasPermission(["master", "admin"]);
-
   useEffect(() => {
+    checkPermissions();
     loadUsers();
   }, []);
+
+  const checkPermissions = async () => {
+    const role = await getCurrentUserRole();
+    setCanManageUsers(role === "master" || role === "admin");
+  };
 
   const loadUsers = async () => {
     try {

@@ -35,6 +35,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const handleLogout = async () => {
     try {
+      const { clearRoleCache } = await import("@/lib/auth");
+      clearRoleCache();
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       

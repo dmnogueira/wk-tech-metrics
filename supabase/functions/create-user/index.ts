@@ -76,20 +76,17 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Falha ao criar usuário");
     }
 
-    // Create profile
+    // Wait a bit for the trigger to create the profile
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Update profile with full name
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .insert({
-        id: newUser.user.id,
-        email,
-        full_name,
-      });
+      .update({ full_name })
+      .eq("id", newUser.user.id);
 
     if (profileError) {
-      console.error("Erro ao criar perfil:", profileError);
-      // Try to delete the auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      throw new Error("Erro ao criar perfil do usuário");
+      console.error("Erro ao atualizar perfil:", profileError);
     }
 
     // Add role if admin

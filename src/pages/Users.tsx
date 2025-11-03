@@ -231,27 +231,32 @@ export default function Users() {
   const confirmDelete = async () => {
     if (!deleteUserId) return;
 
+    const loadingToast = toast.loading("Excluindo usuário...");
+
     try {
-      const { error: rolesError } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", deleteUserId);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.", { id: loadingToast });
+        return;
+      }
 
-      if (rolesError) throw rolesError;
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { userId: deleteUserId },
+      });
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", deleteUserId);
+      if (error) throw error;
 
-      if (profileError) throw profileError;
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
-      toast.success("Usuário excluído com sucesso!");
+      toast.success("Usuário excluído com sucesso!", { id: loadingToast });
       await loadUsers();
       setDeleteUserId(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao excluir usuário:", error);
-      toast.error("Erro ao excluir usuário");
+      toast.error(error.message || "Erro ao excluir usuário", { id: loadingToast });
     }
   };
 

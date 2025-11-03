@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Shield, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Plus, Shield, Pencil, Trash2, RotateCcw, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -44,6 +44,7 @@ export default function Users() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [canManageUsers, setCanManageUsers] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -108,9 +109,13 @@ export default function Users() {
       return;
     }
 
+    setSaving(true);
+
     try {
       if (editingUserId) {
         // Update existing user
+        toast.info("Atualizando usuário...");
+        
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
@@ -148,6 +153,8 @@ export default function Users() {
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Create new user via edge function
+        toast.info("Criando usuário e enviando e-mail...");
+        
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
@@ -178,6 +185,8 @@ export default function Users() {
     } catch (error: any) {
       console.error("Erro ao salvar usuário:", error);
       toast.error(error.message || "Erro ao salvar usuário");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -195,6 +204,8 @@ export default function Users() {
     if (!confirm(`Resetar senha de ${user.full_name}? Um e-mail será enviado com a senha temporária.`)) {
       return;
     }
+
+    const loadingToast = toast.loading("Resetando senha e enviando e-mail...");
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -218,10 +229,14 @@ export default function Users() {
         throw new Error(data.error);
       }
 
-      toast.success("Senha resetada! E-mail enviado ao usuário.");
+      toast.success("Senha resetada! E-mail enviado ao usuário.", {
+        id: loadingToast,
+      });
     } catch (error: any) {
       console.error("Erro ao resetar senha:", error);
-      toast.error(error.message || "Erro ao resetar senha");
+      toast.error(error.message || "Erro ao resetar senha", {
+        id: loadingToast,
+      });
     }
   };
 
@@ -406,11 +421,23 @@ export default function Users() {
               </div>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={saving}
+                >
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingUserId ? "Salvar alterações" : "Criar usuário"}
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingUserId ? "Salvando..." : "Criando..."}
+                    </>
+                  ) : (
+                    editingUserId ? "Salvar alterações" : "Criar usuário"
+                  )}
                 </Button>
               </DialogFooter>
             </form>

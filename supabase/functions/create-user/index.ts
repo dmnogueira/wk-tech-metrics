@@ -69,7 +69,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (createError) {
       console.error("Erro ao criar usuário:", createError);
-      throw new Error(createError.message);
+      
+      // Handle specific error for existing user
+      if (createError.message?.includes("already been registered")) {
+        throw new Error("Já existe um usuário cadastrado com este e-mail");
+      }
+      
+      throw new Error(createError.message || "Erro ao criar usuário");
     }
 
     if (!newUser.user) {

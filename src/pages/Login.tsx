@@ -54,12 +54,14 @@ export default function Login() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" && session) {
+      console.log("Auth state change:", event, session);
+      
+      if (event === "PASSWORD_RECOVERY") {
+        console.log("Password recovery detected");
         setShowForgotPassword(false);
         setShowChangePassword(true);
-        const recoveredEmail = session.user.email ?? "";
-        if (recoveredEmail) {
-          setEmail(recoveredEmail);
+        if (session?.user?.email) {
+          setEmail(session.user.email);
         }
       } else if (event === "SIGNED_IN" && session) {
         if (session.user.user_metadata?.must_change_password) {
@@ -110,17 +112,13 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('forgot-password', {
-        body: { email: emailToReset }
+      const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
+        redirectTo: `${window.location.origin}/login`,
       });
 
       if (error) throw error;
 
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      toast.success(data?.message || "E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada e clique no link para redefinir sua senha.");
       setShowForgotPassword(false);
       setResetEmail("");
     } catch (error: any) {
@@ -278,9 +276,9 @@ export default function Login() {
       <Dialog open={showChangePassword} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Alterar senha obrigatória</DialogTitle>
+            <DialogTitle>Definir nova senha</DialogTitle>
             <DialogDescription>
-              Por segurança, você deve alterar sua senha temporária antes de continuar. Requisitos: mínimo de 12 caracteres, com maiúsculas, minúsculas, números e símbolos.
+              Crie uma senha forte para sua conta. Requisitos: mínimo de 12 caracteres, com maiúsculas, minúsculas, números e símbolos.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -292,6 +290,7 @@ export default function Login() {
                 placeholder="Digite sua nova senha"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                autoFocus
               />
             </div>
             <div className="space-y-2">
@@ -307,7 +306,7 @@ export default function Login() {
           </div>
           <DialogFooter>
             <Button onClick={handleChangePassword} disabled={isLoading} className="w-full">
-              {isLoading ? "Alterando..." : "Alterar senha"}
+              {isLoading ? "Salvando..." : "Salvar nova senha"}
             </Button>
           </DialogFooter>
         </DialogContent>

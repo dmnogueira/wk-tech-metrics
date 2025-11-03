@@ -15,7 +15,7 @@ export function useProfessionals() {
         .select(`
           *,
           profile:profiles(full_name, email, avatar_url),
-          position:positions(title),
+          position:positions(name),
           squad:squads(name)
         `)
         .order("created_at", { ascending: false });
@@ -27,7 +27,7 @@ export function useProfessionals() {
         id: prof.id,
         name: prof.profile?.full_name || "",
         email: prof.profile?.email || "",
-        role: prof.position?.title || "",
+        role: prof.position?.name || "",
         squad: prof.squad?.name || "",
         seniority: prof.seniority || "Pleno",
         profileType: "colaborador" as const,

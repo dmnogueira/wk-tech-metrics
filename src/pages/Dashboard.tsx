@@ -5,6 +5,7 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Bug, AlertTriangle, Users, TrendingUp, Target, Code, Activity } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState("2025-09");
@@ -123,7 +124,15 @@ export default function Dashboard() {
             title="Gestão de Crises"
             value={8}
             subtitle="Ocorrências em setembro"
-            badge={{ label: "Monitoramento", variant: "secondary", color: "warning" }}
+            titleClassName="text-lg font-semibold text-foreground"
+            titleAdornment={
+              <Badge
+                variant="outline"
+                className="border-warning/40 bg-warning/10 text-warning px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+              >
+                Monitoramento
+              </Badge>
+            }
             className="w-full"
           >
             <ResponsiveContainer width="100%" height={200}>

@@ -149,7 +149,7 @@ export default function Import() {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+              <Button type="submit" className="w-full">
                 Salvar Métricas
               </Button>
             </form>

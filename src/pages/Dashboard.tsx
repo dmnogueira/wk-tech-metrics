@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { KPICard } from "@/components/dashboard/KPICard";
@@ -12,17 +12,17 @@ export default function Dashboard() {
   const [selectedSquad, setSelectedSquad] = useState("all");
   const [compareWithPrevious, setCompareWithPrevious] = useState(true);
 
-  // Mock data para IR por Squad
-  const irData = [
+  // Mock data para IR por Squad - memoizado para evitar re-renders
+  const irData = useMemo(() => [
     { date: "01 Ago", Controladoria: 0.57, RH: 0.20, Empresarial: 0.20 },
     { date: "08 Ago", Controladoria: 0.65, RH: 0.22, Empresarial: 0.24 },
     { date: "15 Ago", Controladoria: 0.75, RH: 0.25, Empresarial: 0.26 },
     { date: "22 Ago", Controladoria: 0.85, RH: 0.28, Empresarial: 0.28 },
     { date: "01 Set", Controladoria: 1.00, RH: 0.30, Empresarial: 0.30 },
-  ];
+  ], []);
 
-  // Mock data para Acompanhamento Mensal
-  const monthlyData = [
+  // Mock data para Acompanhamento Mensal - memoizado
+  const monthlyData = useMemo(() => [
     { month: "Jan", bugs: 120, issues: 45 },
     { month: "Fev", bugs: 115, issues: 50 },
     { month: "Mar", bugs: 108, issues: 42 },
@@ -32,10 +32,10 @@ export default function Dashboard() {
     { month: "Jul", bugs: 85, issues: 52 },
     { month: "Ago", bugs: 98, issues: 45 },
     { month: "Set", bugs: 88, issues: 40 },
-  ];
+  ], []);
 
-  // Mock data para Gestão de Crises
-  const crisisData = [
+  // Mock data para Gestão de Crises - memoizado
+  const crisisData = useMemo(() => [
     { month: "Jan", count: 6 },
     { month: "Fev", count: 4 },
     { month: "Mar", count: 9 },
@@ -45,10 +45,10 @@ export default function Dashboard() {
     { month: "Jul", count: 3 },
     { month: "Ago", count: 2 },
     { month: "Set", count: 8 },
-  ];
+  ], []);
 
-  // Mock data para Cards de Bug por Score
-  const bugScoreData = [
+  // Mock data para Cards de Bug por Score - memoizado
+  const bugScoreData = useMemo(() => [
     { month: "Jan", score0: 0, score1: 21, score2: 34, score3: 28, score4: 18 },
     { month: "Fev", score0: 0, score1: 26, score2: 38, score3: 30, score4: 22 },
     { month: "Mar", score0: 0, score1: 24, score2: 36, score3: 32, score4: 20 },
@@ -58,7 +58,7 @@ export default function Dashboard() {
     { month: "Jul", score0: 0, score1: 26, score2: 42, score3: 36, score4: 24 },
     { month: "Ago", score0: 0, score1: 28, score2: 44, score3: 38, score4: 26 },
     { month: "Set", score0: 0, score1: 24, score2: 40, score3: 34, score4: 22 },
-  ];
+  ], []);
 
   return (
     <DashboardLayout>
@@ -147,7 +147,7 @@ export default function Dashboard() {
                     borderRadius: "var(--radius)",
                   }}
                 />
-                <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </KPICard>
@@ -175,9 +175,9 @@ export default function Dashboard() {
                   }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="Controladoria" stroke="hsl(var(--chart-3))" strokeWidth={2} />
-                <Line type="monotone" dataKey="RH" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-                <Line type="monotone" dataKey="Empresarial" stroke="hsl(var(--chart-2))" strokeWidth={2} />
+                <Line type="monotone" dataKey="Controladoria" stroke="hsl(var(--chart-3))" strokeWidth={2} isAnimationActive={false} />
+                <Line type="monotone" dataKey="RH" stroke="hsl(var(--chart-1))" strokeWidth={2} isAnimationActive={false} />
+                <Line type="monotone" dataKey="Empresarial" stroke="hsl(var(--chart-2))" strokeWidth={2} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </KPICard>
@@ -204,8 +204,8 @@ export default function Dashboard() {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="bugs" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="issues" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="bugs" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="issues" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </KPICard>
@@ -278,10 +278,10 @@ export default function Dashboard() {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="score1" stackId="a" fill="hsl(var(--chart-1))" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="score2" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="score3" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="score4" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="score1" stackId="a" fill="hsl(var(--chart-1))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="score2" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="score3" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="score4" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </KPICard>

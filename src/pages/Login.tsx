@@ -110,13 +110,17 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
-        redirectTo: `${window.location.origin}/login`,
+      const { data, error } = await supabase.functions.invoke('forgot-password', {
+        body: { email: emailToReset }
       });
 
       if (error) throw error;
 
-      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success(data?.message || "E-mail de recuperação enviado! Verifique sua caixa de entrada.");
       setShowForgotPassword(false);
       setResetEmail("");
     } catch (error: any) {

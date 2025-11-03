@@ -23,6 +23,41 @@ interface CreateUserRequest {
   is_admin: boolean;
 }
 
+// Strong temporary password generator ensuring complexity and cryptographic randomness
+function generateStrongTempPassword(length: number = 16): string {
+  const LOWER = "abcdefghijklmnopqrstuvwxyz";
+  const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const DIGITS = "0123456789";
+  const SYMBOLS = "!@#$%^&*()-_=+[]{};:,.?/";
+  const ALL = LOWER + UPPER + DIGITS + SYMBOLS;
+
+  const getRandomInt = (max: number) => {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] % max;
+  };
+
+  // Ensure at least one of each required class
+  const result: string[] = [
+    LOWER[getRandomInt(LOWER.length)],
+    UPPER[getRandomInt(UPPER.length)],
+    DIGITS[getRandomInt(DIGITS.length)],
+    SYMBOLS[getRandomInt(SYMBOLS.length)],
+  ];
+
+  for (let i = result.length; i < length; i++) {
+    result.push(ALL[getRandomInt(ALL.length)]);
+  }
+
+  // Shuffle to avoid predictable positions
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = getRandomInt(i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result.join("");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -63,8 +98,8 @@ const handler = async (req: Request): Promise<Response> => {
     const validatedData = createUserSchema.parse(rawData);
     const { email, full_name, is_admin } = validatedData;
 
-    // Generate temporary password
-    const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase();
+    // Generate cryptographically-strong temporary password
+    const tempPassword = generateStrongTempPassword(16);
 
     // Create user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({

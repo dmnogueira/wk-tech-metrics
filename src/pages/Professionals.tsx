@@ -62,6 +62,49 @@ export default function Professionals() {
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
   const squadOptions = useMemo(() => squads.map((squad) => squad.name), [squads]);
 
+  // Hierarquia de cargos para ordenação
+  const hierarchyOrder: Record<string, number> = {
+    diretoria: 1,
+    diretor: 1,
+    diretora: 1,
+    gerencia: 2,
+    gerente: 2,
+    coordenacao: 3,
+    coordenador: 3,
+    coordenadora: 3,
+    squad: 4,
+  };
+
+  const getHierarchyLevel = (role: string): number => {
+    const normalizedRole = role.toLowerCase().trim();
+    
+    // Verifica se o cargo contém alguma das palavras-chave da hierarquia
+    for (const [key, level] of Object.entries(hierarchyOrder)) {
+      if (normalizedRole.includes(key)) {
+        return level;
+      }
+    }
+    
+    // Se não encontrou nenhuma palavra-chave, retorna 5 (profissionais comuns)
+    return 5;
+  };
+
+  // Ordena os profissionais por hierarquia
+  const sortedProfessionals = useMemo(() => {
+    return [...professionals].sort((a, b) => {
+      const levelA = getHierarchyLevel(a.role || "");
+      const levelB = getHierarchyLevel(b.role || "");
+      
+      // Ordena primeiro por nível hierárquico
+      if (levelA !== levelB) {
+        return levelA - levelB;
+      }
+      
+      // Se estiverem no mesmo nível, ordena por nome
+      return a.name.localeCompare(b.name);
+    });
+  }, [professionals]);
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -511,7 +554,7 @@ export default function Professionals() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {professionals.map((professional) => (
+                {sortedProfessionals.map((professional) => (
                   <TableRow key={professional.id}>
                     <TableCell>
                       <Avatar className="h-12 w-12">

@@ -663,7 +663,11 @@ export default function Professionals() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {professional.squad ? professional.squad : (
+                      {professional.managedSquads && professional.managedSquads.length > 1 ? (
+                        <span className="text-primary font-medium">Vários</span>
+                      ) : professional.squad ? (
+                        professional.squad
+                      ) : (
                         <span className="text-muted-foreground text-sm">Não informado</span>
                       )}
                     </TableCell>

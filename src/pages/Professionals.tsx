@@ -30,8 +30,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { JobRole, Professional, Squad } from "@/lib/models";
+import { Professional } from "@/lib/models";
+import { useProfessionals } from "@/hooks/use-professionals";
+import { useSquads } from "@/hooks/use-squads";
+import { useJobRoles } from "@/hooks/use-job-roles";
 
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -39,9 +41,9 @@ const createId = () =>
     : Date.now().toString();
 
 export default function Professionals() {
-  const [professionals, setProfessionals] = useLocalStorage<Professional[]>("professionals", []);
-  const [jobRoles, setJobRoles] = useLocalStorage<JobRole[]>("job-roles", []);
-  const [squads, setSquads] = useLocalStorage<Squad[]>("squads", []);
+  const { professionals, isLoading: loadingProfessionals, addProfessional, updateProfessional, deleteProfessional } = useProfessionals();
+  const { jobRoles, addJobRole } = useJobRoles();
+  const { squads, addSquad } = useSquads();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProfessionalId, setEditingProfessionalId] = useState<string | null>(null);
   const [deleteProfessionalId, setDeleteProfessionalId] = useState<string | null>(null);
@@ -127,41 +129,46 @@ export default function Professionals() {
     setEditingProfessionalId(null);
   };
 
-  const handleAddNewRole = () => {
+  const handleAddNewRole = async () => {
     if (!newRoleTitle.trim()) {
       toast.error("Informe o título do cargo.");
       return;
     }
-    const newRole: JobRole = {
-      id: createId(),
-      title: newRoleTitle.trim(),
-    };
-    setJobRoles((prev) => [...prev, newRole]);
-    setFormData((prev) => ({ ...prev, role: newRole.title }));
-    setNewRoleTitle("");
-    setIsNewRoleDialogOpen(false);
-    toast.success("Cargo adicionado com sucesso!");
+    
+    try {
+      await addJobRole({
+        title: newRoleTitle.trim(),
+        description: "",
+      });
+      setFormData((prev) => ({ ...prev, role: newRoleTitle.trim() }));
+      setNewRoleTitle("");
+      setIsNewRoleDialogOpen(false);
+    } catch (error) {
+      // Toast já foi mostrado no hook
+    }
   };
 
-  const handleAddNewSquad = () => {
+  const handleAddNewSquad = async () => {
     if (!newSquadData.name.trim()) {
       toast.error("Informe o nome do squad.");
       return;
     }
-    const newSquad: Squad = {
-      id: createId(),
-      name: newSquadData.name.trim(),
-      area: newSquadData.area.trim(),
-      description: "",
-    };
-    setSquads((prev) => [...prev, newSquad]);
-    setFormData((prev) => ({ ...prev, squad: newSquad.name }));
-    setNewSquadData({ name: "", area: "" });
-    setIsNewSquadDialogOpen(false);
-    toast.success("Squad adicionado com sucesso!");
+    
+    try {
+      await addSquad({
+        name: newSquadData.name.trim(),
+        area: newSquadData.area.trim(),
+        description: "",
+      });
+      setFormData((prev) => ({ ...prev, squad: newSquadData.name.trim() }));
+      setNewSquadData({ name: "", area: "" });
+      setIsNewSquadDialogOpen(false);
+    } catch (error) {
+      // Toast já foi mostrado no hook
+    }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!formData.name.trim() || !formData.email.trim()) {
@@ -169,25 +176,18 @@ export default function Professionals() {
       return;
     }
 
-    if (editingProfessionalId) {
-      setProfessionals((previous) =>
-        previous.map((professional) =>
-          professional.id === editingProfessionalId ? { ...professional, ...formData } : professional,
-        ),
-      );
-      toast.success("Profissional atualizado com sucesso!");
-    } else {
-      const newProfessional: Professional = {
-        id: createId(),
-        ...formData,
-      };
-
-      setProfessionals((previous) => [...previous, newProfessional]);
-      toast.success("Profissional cadastrado com sucesso!");
+    try {
+      if (editingProfessionalId) {
+        await updateProfessional(editingProfessionalId, formData);
+      } else {
+        await addProfessional(formData);
+      }
+      
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Toast já foi mostrado no hook
     }
-
-    resetForm();
-    setIsDialogOpen(false);
   };
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,11 +225,14 @@ export default function Professionals() {
     setIsDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteProfessionalId) {
-      setProfessionals((previous) => previous.filter((professional) => professional.id !== deleteProfessionalId));
-      toast.success("Profissional removido com sucesso!");
-      setDeleteProfessionalId(null);
+      try {
+        await deleteProfessional(deleteProfessionalId);
+        setDeleteProfessionalId(null);
+      } catch (error) {
+        // Toast já foi mostrado no hook
+      }
     }
   };
 
@@ -621,7 +624,14 @@ export default function Professionals() {
           </Dialog>
         </div>
 
-        {professionals.length > 0 ? (
+        {loadingProfessionals ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Carregando profissionais...</p>
+            </div>
+          </div>
+        ) : professionals.length > 0 ? (
           <Card className="p-0">
             <Table>
               <TableHeader>

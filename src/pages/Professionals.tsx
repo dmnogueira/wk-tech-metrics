@@ -284,7 +284,7 @@ export default function Professionals() {
                       </SelectTrigger>
                       <SelectContent>
                         <div
-                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             setIsNewRoleDialogOpen(true);
@@ -321,7 +321,7 @@ export default function Professionals() {
                       </SelectTrigger>
                       <SelectContent>
                         <div
-                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             setIsNewSquadDialogOpen(true);

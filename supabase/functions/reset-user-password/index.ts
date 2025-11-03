@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -8,6 +9,13 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation schema
+const resetPasswordSchema = z.object({
+  userId: z.string().uuid("ID de usuário inválido"),
+  userEmail: z.string().email("Email inválido").max(255, "Email muito longo"),
+  userName: z.string().min(1, "Nome obrigatório").max(100, "Nome muito longo").trim()
+});
 
 interface ResetPasswordRequest {
   userId: string;
@@ -50,7 +58,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Permissão negada. Apenas administradores podem resetar senhas.");
     }
 
-    const { userId, userEmail, userName }: ResetPasswordRequest = await req.json();
+    // Parse and validate input
+    const rawData = await req.json();
+    const validatedData = resetPasswordSchema.parse(rawData);
+    const { userId, userEmail, userName } = validatedData;
 
     // Generate temporary password
     const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase();
@@ -114,6 +125,21 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Erro na função reset-user-password:", error);
+    
+    // Handle validation errors specifically
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Dados inválidos",
+          details: error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       {

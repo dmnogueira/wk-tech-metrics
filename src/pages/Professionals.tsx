@@ -512,11 +512,7 @@ export default function Professionals() {
                         </label>
                       </div>
                       {squadOptions
-                        .sort((a, b) => {
-                          const squadA = squads.find(s => s.name === a);
-                          const squadB = squads.find(s => s.name === b);
-                          return (squadA?.order ?? 999) - (squadB?.order ?? 999);
-                        })
+                        .filter((squadName) => squadName !== "Nenhum Squad")
                         .map((squadName) => (
                           <div key={squadName} className="flex items-center space-x-2">
                             <Checkbox

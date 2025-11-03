@@ -57,6 +57,7 @@ export default function Professionals() {
     profileType: "colaborador",
     avatar: undefined,
     managerId: undefined,
+    managedSquads: [],
   });
 
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
@@ -115,6 +116,7 @@ export default function Professionals() {
       profileType: "colaborador",
       avatar: undefined,
       managerId: undefined,
+      managedSquads: [],
     });
     setEditingProfessionalId(null);
   };
@@ -211,6 +213,7 @@ export default function Professionals() {
       profileType: professional.profileType,
       avatar: professional.avatar,
       managerId: professional.managerId,
+      managedSquads: professional.managedSquads || [],
     });
     setEditingProfessionalId(professional.id);
     setIsDialogOpen(true);

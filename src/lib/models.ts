@@ -18,6 +18,7 @@ export interface Professional {
   profileType: "gestao" | "especialista" | "colaborador" | "master" | "admin";
   avatar?: string;
   managerId?: string;
+  managedSquads?: string[]; // Squads gerenciados (para perfil gestão)
 }
 
 export interface JobRole {

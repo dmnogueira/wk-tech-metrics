@@ -359,13 +359,19 @@ export default function Professionals() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Nenhuma liderança</SelectItem>
-                      {professionals
-                        .filter((p) => p.id !== editingProfessionalId && p.profileType === "gestao")
-                        .map((professional) => (
-                          <SelectItem key={professional.id} value={professional.id}>
-                            {professional.name} - {professional.role || "Sem cargo"}
-                          </SelectItem>
-                        ))}
+                      {professionals.filter((p) => p.id !== editingProfessionalId).length === 0 ? (
+                        <SelectItem value="no-professionals" disabled>
+                          Nenhum profissional cadastrado
+                        </SelectItem>
+                      ) : (
+                        professionals
+                          .filter((p) => p.id !== editingProfessionalId)
+                          .map((professional) => (
+                            <SelectItem key={professional.id} value={professional.id}>
+                              {professional.name} - {professional.role || "Sem cargo"}
+                            </SelectItem>
+                          ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

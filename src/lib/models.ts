@@ -17,6 +17,7 @@ export interface Professional {
   seniority: string;
   profileType: "gestao" | "especialista" | "colaborador" | "master" | "admin";
   avatar?: string;
+  managerId?: string;
 }
 
 export interface JobRole {

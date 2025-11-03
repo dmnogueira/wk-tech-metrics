@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, UserCircle, Pencil, Trash2 } from "lucide-react";
+import { Plus, UserCircle, Pencil, Trash2, PlusCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -39,11 +39,15 @@ const createId = () =>
 
 export default function Professionals() {
   const [professionals, setProfessionals] = useLocalStorage<Professional[]>("professionals", []);
-  const [jobRoles] = useLocalStorage<JobRole[]>("job-roles", []);
-  const [squads] = useLocalStorage<Squad[]>("squads", []);
+  const [jobRoles, setJobRoles] = useLocalStorage<JobRole[]>("job-roles", []);
+  const [squads, setSquads] = useLocalStorage<Squad[]>("squads", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProfessionalId, setEditingProfessionalId] = useState<string | null>(null);
   const [deleteProfessionalId, setDeleteProfessionalId] = useState<string | null>(null);
+  const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
+  const [isNewSquadDialogOpen, setIsNewSquadDialogOpen] = useState(false);
+  const [newRoleTitle, setNewRoleTitle] = useState("");
+  const [newSquadData, setNewSquadData] = useState({ name: "", area: "" });
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
     name: "",
     email: "",
@@ -52,6 +56,7 @@ export default function Professionals() {
     seniority: "Pleno",
     profileType: "colaborador",
     avatar: undefined,
+    managerId: undefined,
   });
 
   const roleOptions = useMemo(() => jobRoles.map((role) => role.title), [jobRoles]);
@@ -66,8 +71,43 @@ export default function Professionals() {
       seniority: "Pleno",
       profileType: "colaborador",
       avatar: undefined,
+      managerId: undefined,
     });
     setEditingProfessionalId(null);
+  };
+
+  const handleAddNewRole = () => {
+    if (!newRoleTitle.trim()) {
+      toast.error("Informe o título do cargo.");
+      return;
+    }
+    const newRole: JobRole = {
+      id: createId(),
+      title: newRoleTitle.trim(),
+    };
+    setJobRoles((prev) => [...prev, newRole]);
+    setFormData((prev) => ({ ...prev, role: newRole.title }));
+    setNewRoleTitle("");
+    setIsNewRoleDialogOpen(false);
+    toast.success("Cargo adicionado com sucesso!");
+  };
+
+  const handleAddNewSquad = () => {
+    if (!newSquadData.name.trim()) {
+      toast.error("Informe o nome do squad.");
+      return;
+    }
+    const newSquad: Squad = {
+      id: createId(),
+      name: newSquadData.name.trim(),
+      area: newSquadData.area.trim(),
+      description: "",
+    };
+    setSquads((prev) => [...prev, newSquad]);
+    setFormData((prev) => ({ ...prev, squad: newSquad.name }));
+    setNewSquadData({ name: "", area: "" });
+    setIsNewSquadDialogOpen(false);
+    toast.success("Squad adicionado com sucesso!");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -127,6 +167,7 @@ export default function Professionals() {
       seniority: professional.seniority,
       profileType: professional.profileType,
       avatar: professional.avatar,
+      managerId: professional.managerId,
     });
     setEditingProfessionalId(professional.id);
     setIsDialogOpen(true);
@@ -232,57 +273,103 @@ export default function Professionals() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="professional-role">Cargo / Função</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value) =>
-                        setFormData((previous) => ({ ...previous, role: value }))
-                      }
-                    >
-                      <SelectTrigger id="professional-role">
-                        <SelectValue placeholder="Selecione o cargo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roleOptions.length === 0 ? (
-                          <SelectItem value="no-roles" disabled>
-                            Cadastre cargos e funções para selecionar aqui.
-                          </SelectItem>
-                        ) : (
-                          roleOptions.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
+                    <div className="flex gap-2">
+                      <Select
+                        value={formData.role}
+                        onValueChange={(value) =>
+                          setFormData((previous) => ({ ...previous, role: value }))
+                        }
+                      >
+                        <SelectTrigger id="professional-role" className="flex-1">
+                          <SelectValue placeholder="Selecione o cargo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roleOptions.length === 0 ? (
+                            <SelectItem value="no-roles" disabled>
+                              Cadastre cargos e funções para selecionar aqui.
                             </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                          ) : (
+                            roleOptions.map((role) => (
+                              <SelectItem key={role} value={role}>
+                                {role}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setIsNewRoleDialogOpen(true)}
+                        title="Adicionar novo cargo"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="professional-squad">Squad</Label>
-                    <Select
-                      value={formData.squad}
-                      onValueChange={(value) =>
-                        setFormData((previous) => ({ ...previous, squad: value }))
-                      }
-                    >
-                      <SelectTrigger id="professional-squad">
-                        <SelectValue placeholder="Selecione o squad" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {squadOptions.length === 0 ? (
-                          <SelectItem value="no-squads" disabled>
-                            Cadastre squads para disponibilizar nesta lista.
-                          </SelectItem>
-                        ) : (
-                          squadOptions.map((squadName) => (
-                            <SelectItem key={squadName} value={squadName}>
-                              {squadName}
+                    <div className="flex gap-2">
+                      <Select
+                        value={formData.squad}
+                        onValueChange={(value) =>
+                          setFormData((previous) => ({ ...previous, squad: value }))
+                        }
+                      >
+                        <SelectTrigger id="professional-squad" className="flex-1">
+                          <SelectValue placeholder="Selecione o squad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {squadOptions.length === 0 ? (
+                            <SelectItem value="no-squads" disabled>
+                              Cadastre squads para disponibilizar nesta lista.
                             </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                          ) : (
+                            squadOptions.map((squadName) => (
+                              <SelectItem key={squadName} value={squadName}>
+                                {squadName}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setIsNewSquadDialogOpen(true)}
+                        title="Adicionar novo squad"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="professional-manager">Liderança Imediata</Label>
+                  <Select
+                    value={formData.managerId}
+                    onValueChange={(value) =>
+                      setFormData((previous) => ({ ...previous, managerId: value === "none" ? undefined : value }))
+                    }
+                  >
+                    <SelectTrigger id="professional-manager">
+                      <SelectValue placeholder="Selecione a liderança" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma liderança</SelectItem>
+                      {professionals
+                        .filter((p) => p.id !== editingProfessionalId)
+                        .map((professional) => (
+                          <SelectItem key={professional.id} value={professional.id}>
+                            {professional.name} - {professional.role || "Sem cargo"}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -334,6 +421,73 @@ export default function Professionals() {
               </form>
             </DialogContent>
           </Dialog>
+
+          {/* Dialog para adicionar novo cargo */}
+          <Dialog open={isNewRoleDialogOpen} onOpenChange={setIsNewRoleDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Cargo</DialogTitle>
+                <DialogDescription>
+                  Crie um novo cargo para selecionar no cadastro.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-role-title">Título do Cargo</Label>
+                  <Input
+                    id="new-role-title"
+                    placeholder="Ex: Desenvolvedor Full Stack"
+                    value={newRoleTitle}
+                    onChange={(e) => setNewRoleTitle(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsNewRoleDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddNewRole}>Adicionar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog para adicionar novo squad */}
+          <Dialog open={isNewSquadDialogOpen} onOpenChange={setIsNewSquadDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Squad</DialogTitle>
+                <DialogDescription>
+                  Crie um novo squad para selecionar no cadastro.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-squad-name">Nome do Squad</Label>
+                  <Input
+                    id="new-squad-name"
+                    placeholder="Ex: Squad Phoenix"
+                    value={newSquadData.name}
+                    onChange={(e) => setNewSquadData((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-squad-area">Área</Label>
+                  <Input
+                    id="new-squad-area"
+                    placeholder="Ex: Desenvolvimento"
+                    value={newSquadData.area}
+                    onChange={(e) => setNewSquadData((prev) => ({ ...prev, area: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsNewSquadDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddNewSquad}>Adicionar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {professionals.length > 0 ? (
@@ -346,6 +500,7 @@ export default function Professionals() {
                   <TableHead>E-mail</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Squad</TableHead>
+                  <TableHead>Liderança</TableHead>
                   <TableHead>Perfil</TableHead>
                   <TableHead className="text-right">Senioridade</TableHead>
                   <TableHead className="w-[120px] text-right">Ações</TableHead>
@@ -379,6 +534,15 @@ export default function Professionals() {
                     <TableCell>
                       {professional.squad ? professional.squad : (
                         <span className="text-muted-foreground text-sm">Não informado</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {professional.managerId ? (
+                        professionals.find((p) => p.id === professional.managerId)?.name || (
+                          <span className="text-muted-foreground text-sm">Não encontrado</span>
+                        )
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Sem liderança</span>
                       )}
                     </TableCell>
                     <TableCell>

@@ -82,11 +82,16 @@ export default function Squads() {
       return;
     }
 
-    // Se não tiver ordem definida, usar o próximo número disponível
+    // Sempre usar o próximo número disponível para novos squads
     let finalOrder = formData.order;
-    if (!finalOrder) {
+    if (!editingSquadId) {
       const maxOrder = Math.max(0, ...squads.map(s => s.order ?? 0));
       finalOrder = maxOrder + 1;
+    } else {
+      // Para edição, garantir que tem um valor válido
+      if (!finalOrder || finalOrder <= 0) {
+        finalOrder = 1;
+      }
     }
 
     const buildSquad = (base: Omit<Squad, "id">, id?: string): Squad => ({
@@ -186,42 +191,61 @@ export default function Squads() {
   const handleDrop = (targetSquadId: string) => {
     if (!draggedSquadId || draggedSquadId === targetSquadId) return;
 
-    const draggedSquad = squads.find(s => s.id === draggedSquadId);
-    const targetSquad = squads.find(s => s.id === targetSquadId);
+    const draggedIndex = sortedSquads.findIndex(s => s.id === draggedSquadId);
+    const targetIndex = sortedSquads.findIndex(s => s.id === targetSquadId);
 
-    if (!draggedSquad || !targetSquad) return;
+    if (draggedIndex === -1 || targetIndex === -1) return;
 
-    const draggedOrder = draggedSquad.order ?? 999;
-    const targetOrder = targetSquad.order ?? 999;
+    // Reordena o array
+    const newSquads = [...sortedSquads];
+    const [removed] = newSquads.splice(draggedIndex, 1);
+    newSquads.splice(targetIndex, 0, removed);
 
-    // Troca as ordens
-    setSquads((previous) =>
-      previous.map((squad) => {
-        if (squad.id === draggedSquadId) {
-          return { ...squad, order: targetOrder };
-        }
-        if (squad.id === targetSquadId) {
-          return { ...squad, order: draggedOrder };
-        }
-        return squad;
-      })
-    );
+    // Atualiza as ordens sequencialmente
+    const updatedSquads = newSquads.map((squad, index) => ({
+      ...squad,
+      order: index + 1
+    }));
 
+    setSquads(updatedSquads);
     toast.success("Ordem atualizada!");
     setDraggedSquadId(null);
   };
 
   const handleOrderChange = (squadId: string, newOrder: number) => {
-    if (newOrder <= 0) {
+    if (!newOrder || newOrder <= 0) {
       toast.error("O campo ordem deve ser maior que zero.");
       return;
     }
 
-    setSquads((previous) =>
-      previous.map((squad) =>
-        squad.id === squadId ? { ...squad, order: newOrder } : squad
-      )
-    );
+    // Encontra o squad que está sendo alterado
+    const targetSquad = sortedSquads.find(s => s.id === squadId);
+    if (!targetSquad) return;
+
+    const oldOrder = targetSquad.order ?? 999;
+
+    // Reordena todos os squads
+    const updatedSquads = sortedSquads.map((squad) => {
+      if (squad.id === squadId) {
+        return { ...squad, order: newOrder };
+      }
+      
+      const currentOrder = squad.order ?? 999;
+      
+      // Se o novo valor é menor (movendo para cima)
+      if (newOrder < oldOrder && currentOrder >= newOrder && currentOrder < oldOrder) {
+        return { ...squad, order: currentOrder + 1 };
+      }
+      
+      // Se o novo valor é maior (movendo para baixo)
+      if (newOrder > oldOrder && currentOrder <= newOrder && currentOrder > oldOrder) {
+        return { ...squad, order: currentOrder - 1 };
+      }
+      
+      return squad;
+    });
+
+    setSquads(updatedSquads);
     toast.success("Ordem atualizada!");
   };
 
@@ -465,9 +489,22 @@ export default function Squads() {
                         type="number"
                         min="1"
                         value={squad.order ?? ""}
-                        onChange={(e) => handleOrderChange(squad.id, parseInt(e.target.value))}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (!isNaN(value)) {
+                            handleOrderChange(squad.id, value);
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (isNaN(value) || value <= 0) {
+                            const currentOrder = squad.order ?? 1;
+                            e.target.value = currentOrder.toString();
+                          }
+                        }}
                         className="w-16 h-8"
                         onClick={(e) => e.stopPropagation()}
+                        required
                       />
                     </TableCell>
                     <TableCell className="font-medium text-foreground">{squad.name}</TableCell>

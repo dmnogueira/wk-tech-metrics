@@ -383,7 +383,6 @@ export default function Professionals() {
                             <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-muted-foreground">Adicionar novo squad</span>
                           </div>
-                          <SelectItem value="Nenhum Squad">Nenhum Squad</SelectItem>
                           {squadOptions.length === 0 ? (
                             <SelectItem value="no-squads" disabled>
                               Nenhum squad cadastrado

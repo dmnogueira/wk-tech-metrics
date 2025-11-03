@@ -43,6 +43,7 @@ export default function Users() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [canManageUsers, setCanManageUsers] = useState(false);
@@ -201,9 +202,14 @@ export default function Users() {
   };
 
   const handleResetPassword = async (user: ManagedUser) => {
-    if (!confirm(`Resetar senha de ${user.full_name}? Um e-mail será enviado com a senha temporária.`)) {
-      return;
-    }
+    setResetPasswordUserId(user.id);
+  };
+
+  const confirmResetPassword = async () => {
+    if (!resetPasswordUserId) return;
+
+    const user = users.find(u => u.id === resetPasswordUserId);
+    if (!user) return;
 
     const loadingToast = toast.loading("Resetando senha e enviando e-mail...");
 
@@ -211,7 +217,7 @@ export default function Users() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error("Sessão expirada. Faça login novamente.");
+        toast.error("Sessão expirada. Faça login novamente.", { id: loadingToast });
         return;
       }
 
@@ -232,6 +238,7 @@ export default function Users() {
       toast.success("Senha resetada! E-mail enviado ao usuário.", {
         id: loadingToast,
       });
+      setResetPasswordUserId(null);
     } catch (error: any) {
       console.error("Erro ao resetar senha:", error);
       toast.error(error.message || "Erro ao resetar senha", {
@@ -456,6 +463,27 @@ export default function Users() {
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={resetPasswordUserId !== null} onOpenChange={(open) => !open && setResetPasswordUserId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar reset de senha</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja resetar a senha de{" "}
+                <strong>{users.find(u => u.id === resetPasswordUserId)?.full_name}</strong>?
+                <br />
+                <br />
+                Uma senha temporária será gerada e enviada por e-mail. O usuário será obrigado a alterar a senha no próximo login.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmResetPassword} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Resetar senha
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -1,9 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +20,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const [userName, setUserName] = useState("Usuário");
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    toast.success("Sessão encerrada com sucesso!");
-    navigate("/login");
+  useEffect(() => {
+    // Get current user info
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata?.full_name) {
+        setUserName(user.user_metadata.full_name);
+      } else if (user?.email) {
+        setUserName(user.email.split('@')[0]);
+      }
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast.success("Sessão encerrada com sucesso!");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao encerrar sessão");
+    }
   };
 
   return (
@@ -101,9 +121,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
                   <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-semibold">
-                    DN
+                    {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
-                  <span className="hidden md:inline">Denilson Nogueira</span>
+                  <span className="hidden md:inline">{userName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover border-border">

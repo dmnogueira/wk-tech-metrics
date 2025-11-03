@@ -19,27 +19,27 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return localStorage.getItem("isAuthenticated") === "true";
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const handleAuthChange = () => {
-      setIsAuthenticated(localStorage.getItem("isAuthenticated") === "true");
-    };
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      // Check initial session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
+      });
 
-    handleAuthChange();
-    window.addEventListener("storage", handleAuthChange);
+      // Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        setIsAuthenticated(!!session);
+      });
 
-    return () => {
-      window.removeEventListener("storage", handleAuthChange);
-    };
+      return () => subscription.unsubscribe();
+    });
   }, []);
 
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center text-muted-foreground">
         Carregando...

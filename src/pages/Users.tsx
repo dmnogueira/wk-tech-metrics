@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Shield, Pencil, Trash2, Ban } from "lucide-react";
+import { Plus, Shield, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -12,7 +12,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -26,7 +25,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -62,7 +60,6 @@ export default function Users() {
     try {
       setLoading(true);
       
-      // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -70,14 +67,12 @@ export default function Users() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch all user roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
 
       if (rolesError) throw rolesError;
 
-      // Combine profiles with their admin status
       const usersWithRoles = profiles?.map(profile => ({
         id: profile.id,
         full_name: profile.full_name,
@@ -104,13 +99,13 @@ export default function Users() {
     event.preventDefault();
 
     if (!formData.full_name.trim() || !formData.email.trim()) {
-      toast.error("Preencha nome e e-mail para adicionar o usuário.");
+      toast.error("Preencha nome e e-mail");
       return;
     }
 
     try {
       if (editingUserId) {
-        // Update profile
+        // Update existing user
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
@@ -121,7 +116,6 @@ export default function Users() {
 
         if (profileError) throw profileError;
 
-        // Update user role
         const { data: existingRoles } = await supabase
           .from("user_roles")
           .select("*")
@@ -131,14 +125,12 @@ export default function Users() {
         const hasAdminRole = existingRoles && existingRoles.length > 0;
 
         if (formData.is_admin && !hasAdminRole) {
-          // Add admin role
           const { error: roleError } = await supabase
             .from("user_roles")
             .insert({ user_id: editingUserId, role: "admin" });
 
           if (roleError) throw roleError;
         } else if (!formData.is_admin && hasAdminRole) {
-          // Remove admin role
           const { error: roleError } = await supabase
             .from("user_roles")
             .delete()
@@ -150,18 +142,37 @@ export default function Users() {
 
         toast.success("Usuário atualizado com sucesso!");
       } else {
-        // For new users, we would need to create auth users first
-        // This is typically done through Supabase Auth signup
-        toast.error("Para criar novos usuários, use o sistema de cadastro/convite");
-        return;
+        // Create new user via edge function
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          toast.error("Sessão expirada. Faça login novamente.");
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke("create-user", {
+          body: {
+            email: formData.email,
+            full_name: formData.full_name,
+            is_admin: formData.is_admin,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        toast.success("Usuário criado! Credenciais enviadas por e-mail.");
       }
 
       await loadUsers();
       resetForm();
       setIsDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar usuário:", error);
-      toast.error("Erro ao salvar usuário");
+      toast.error(error.message || "Erro ao salvar usuário");
     }
   };
 
@@ -175,11 +186,44 @@ export default function Users() {
     setIsDialogOpen(true);
   };
 
+  const handleResetPassword = async (user: ManagedUser) => {
+    if (!confirm(`Resetar senha de ${user.full_name}? Um e-mail será enviado com a senha temporária.`)) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("reset-user-password", {
+        body: {
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.full_name,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success("Senha resetada! E-mail enviado ao usuário.");
+    } catch (error: any) {
+      console.error("Erro ao resetar senha:", error);
+      toast.error(error.message || "Erro ao resetar senha");
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteUserId) return;
 
     try {
-      // Delete user roles first (due to foreign key)
       const { error: rolesError } = await supabase
         .from("user_roles")
         .delete()
@@ -187,7 +231,6 @@ export default function Users() {
 
       if (rolesError) throw rolesError;
 
-      // Delete profile
       const { error: profileError } = await supabase
         .from("profiles")
         .delete()
@@ -213,75 +256,16 @@ export default function Users() {
             <p className="text-muted-foreground">Gerencie usuários e permissões do sistema</p>
           </div>
 
-          {canManageUsers && editingUserId && (
-            <Dialog
-              open={isDialogOpen}
-              onOpenChange={(open) => {
-                setIsDialogOpen(open);
-                if (!open) {
-                  resetForm();
-                }
+          {canManageUsers && (
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsDialogOpen(true);
               }}
             >
-
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Editar usuário</DialogTitle>
-                  <DialogDescription>
-                    Atualize as informações e permissões do usuário.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="user-name">Nome completo</Label>
-                    <Input
-                      id="user-name"
-                      placeholder="Ex: Maria Souza"
-                      value={formData.full_name}
-                      onChange={(event) =>
-                        setFormData((previous) => ({ ...previous, full_name: event.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="user-email">E-mail</Label>
-                    <Input
-                      id="user-email"
-                      type="email"
-                      placeholder="nome.sobrenome@wk.com.br"
-                      value={formData.email}
-                      onChange={(event) =>
-                        setFormData((previous) => ({ ...previous, email: event.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="is-admin"
-                      checked={formData.is_admin}
-                      onCheckedChange={(checked) =>
-                        setFormData((previous) => ({ ...previous, is_admin: checked as boolean }))
-                      }
-                    />
-                    <Label htmlFor="is-admin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Usuário Administrador
-                    </Label>
-                  </div>
-
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit">Salvar alterações</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo usuário
+            </Button>
           )}
         </div>
 
@@ -299,7 +283,7 @@ export default function Users() {
                   <TableHead>Nome</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Perfil</TableHead>
-                  {canManageUsers && <TableHead className="w-[120px] text-right">Ações</TableHead>}
+                  {canManageUsers && <TableHead className="w-[150px] text-right">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -321,7 +305,20 @@ export default function Users() {
                     {canManageUsers && (
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleResetPassword(user)}
+                            title="Resetar senha"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEdit(user)}
+                            title="Editar"
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
@@ -329,6 +326,7 @@ export default function Users() {
                             size="icon"
                             onClick={() => setDeleteUserId(user.id)}
                             className="text-destructive hover:text-destructive"
+                            title="Excluir"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -345,10 +343,74 @@ export default function Users() {
             <div className="text-center py-12 text-muted-foreground">
               <Shield className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg mb-2">Nenhum usuário cadastrado</p>
-              <p className="text-sm">Os usuários serão exibidos aqui quando forem criados</p>
+              <p className="text-sm">Clique em "Novo usuário" para começar</p>
             </div>
           </Card>
         )}
+
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingUserId ? "Editar usuário" : "Novo usuário"}</DialogTitle>
+              <DialogDescription>
+                {editingUserId 
+                  ? "Atualize as informações e permissões do usuário." 
+                  : "O usuário receberá um e-mail com a senha temporária."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="user-name">Nome completo</Label>
+                <Input
+                  id="user-name"
+                  placeholder="Ex: Maria Souza"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="user-email">E-mail</Label>
+                <Input
+                  id="user-email"
+                  type="email"
+                  placeholder="nome.sobrenome@wk.com.br"
+                  value={formData.email}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                  required
+                  disabled={!!editingUserId}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is-admin"
+                  checked={formData.is_admin}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_admin: checked as boolean }))
+                  }
+                />
+                <Label htmlFor="is-admin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Usuário Administrador
+                </Label>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {editingUserId ? "Salvar alterações" : "Criar usuário"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         <AlertDialog open={deleteUserId !== null} onOpenChange={(open) => !open && setDeleteUserId(null)}>
           <AlertDialogContent>

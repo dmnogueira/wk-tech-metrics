@@ -5,7 +5,7 @@ import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Info } fr
 import { cn } from "@/lib/utils";
 
 interface KPICardProps {
-  title: string;
+  title: ReactNode;
   value: string | number;
   subtitle?: string;
   badge?: {
@@ -23,6 +23,8 @@ interface KPICardProps {
   icon?: ReactNode;
   status?: "critical" | "warning" | "success" | "info";
   className?: string;
+  titleClassName?: string;
+  titleAdornment?: ReactNode;
   children?: ReactNode;
 }
 
@@ -60,6 +62,8 @@ export function KPICard({
   icon,
   status,
   className,
+  titleClassName,
+  titleAdornment,
   children,
 }: KPICardProps) {
   const StatusIcon = status ? statusConfig[status].icon : null;
@@ -75,9 +79,12 @@ export function KPICard({
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              {icon && <div className="text-muted-foreground">{icon}</div>}
-              <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                {icon && <div className="text-muted-foreground">{icon}</div>}
+                <h3 className={cn("text-sm font-medium text-muted-foreground", titleClassName)}>{title}</h3>
+              </div>
+              {titleAdornment && <div className="flex items-center gap-2">{titleAdornment}</div>}
             </div>
             <div className="flex items-baseline gap-2">
               <p className="text-3xl font-bold text-foreground">{value}</p>

@@ -96,7 +96,7 @@ export default function Settings() {
               </div>
             </div>
 
-            <Button type="submit" className="bg-accent hover:bg-accent/90">
+            <Button type="submit">
               <Save className="h-4 w-4 mr-2" />
               Salvar Configurações
             </Button>

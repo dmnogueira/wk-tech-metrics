@@ -362,7 +362,7 @@ export default function Professionals() {
                     <SelectContent>
                       <SelectItem value="none">Nenhuma liderança</SelectItem>
                       {professionals
-                        .filter((p) => p.id !== editingProfessionalId)
+                        .filter((p) => p.id !== editingProfessionalId && p.profileType === "gestao")
                         .map((professional) => (
                           <SelectItem key={professional.id} value={professional.id}>
                             {professional.name} - {professional.role || "Sem cargo"}

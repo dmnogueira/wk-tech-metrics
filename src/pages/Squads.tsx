@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Users, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,27 +23,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { hasPermission } from "@/lib/auth";
+import { Professional, Squad } from "@/lib/models";
 
-interface Squad {
-  id: number;
-  name: string;
-  area: string;
-  description: string;
-}
+const createId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Date.now().toString();
 
 export default function Squads() {
-  const [squads, setSquads] = useState<Squad[]>([]);
+  const [squads, setSquads] = useLocalStorage<Squad[]>("squads", []);
+  const [professionals] = useLocalStorage<Professional[]>("professionals", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSquadId, setEditingSquadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Squad, "id">>({
     name: "",
     area: "",
     description: "",
+    managerId: undefined,
   });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -42,16 +53,42 @@ export default function Squads() {
       toast.error("Informe o nome do squad.");
       return;
     }
+    const buildSquad = (base: Omit<Squad, "id">, id?: string): Squad => ({
+      id: id ?? createId(),
+      ...base,
+    });
 
-    const newSquad: Squad = {
-      id: Date.now(),
-      ...formData,
-    };
+    if (editingSquadId) {
+      setSquads((previous) =>
+        previous.map((squad) => (squad.id === editingSquadId ? buildSquad(formData, editingSquadId) : squad)),
+      );
+      toast.success("Squad atualizado com sucesso!");
+    } else {
+      const newSquad = buildSquad(formData);
+      setSquads((previous) => [...previous, newSquad]);
+      toast.success("Squad criado com sucesso!");
+    }
 
-    setSquads((previous) => [...previous, newSquad]);
-    setFormData({ name: "", area: "", description: "" });
+    setFormData({ name: "", area: "", description: "", managerId: undefined });
+    setEditingSquadId(null);
     setIsDialogOpen(false);
-    toast.success("Squad criado com sucesso!");
+  };
+
+  const managers = useMemo(
+    () =>
+      professionals.filter((professional) => professional.profileType === "gestao" || professional.profileType === "admin"),
+    [professionals],
+  );
+
+  const handleEdit = (squad: Squad) => {
+    setFormData({ name: squad.name, area: squad.area, description: squad.description, managerId: squad.managerId });
+    setEditingSquadId(squad.id);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (squadId: string) => {
+    setSquads((previous) => previous.filter((squad) => squad.id !== squadId));
+    toast.success("Squad removido com sucesso!");
   };
 
   return (
@@ -63,7 +100,16 @@ export default function Squads() {
             <p className="text-muted-foreground">Gerencie os squads e suas configurações</p>
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) {
+                setFormData({ name: "", area: "", description: "", managerId: undefined });
+                setEditingSquadId(null);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -73,7 +119,7 @@ export default function Squads() {
 
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Registrar novo squad</DialogTitle>
+                <DialogTitle>{editingSquadId ? "Editar squad" : "Registrar novo squad"}</DialogTitle>
                 <DialogDescription>
                   Informe os detalhes para organizar equipes multidisciplinares no monitoramento.
                 </DialogDescription>
@@ -106,6 +152,33 @@ export default function Squads() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="squad-manager">Gestão do squad</Label>
+                  <Select
+                    value={formData.managerId ?? ""}
+                    onValueChange={(value) =>
+                      setFormData((previous) => ({ ...previous, managerId: value || undefined }))
+                    }
+                  >
+                    <SelectTrigger id="squad-manager">
+                      <SelectValue placeholder="Selecione o responsável pela gestão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {managers.length === 0 ? (
+                        <SelectItem value="" disabled>
+                          Cadastre profissionais com perfil de gestão para selecionar aqui.
+                        </SelectItem>
+                      ) : (
+                        managers.map((manager) => (
+                          <SelectItem key={manager.id} value={manager.id}>
+                            {manager.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="squad-description">Descrição</Label>
                   <Textarea
                     id="squad-description"
@@ -122,7 +195,7 @@ export default function Squads() {
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit">Salvar Squad</Button>
+                  <Button type="submit">{editingSquadId ? "Salvar alterações" : "Salvar Squad"}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -136,7 +209,9 @@ export default function Squads() {
                 <TableRow>
                   <TableHead>Squad</TableHead>
                   <TableHead>Área</TableHead>
+                  <TableHead>Gestão</TableHead>
                   <TableHead>Descrição</TableHead>
+                  {hasPermission(["master", "admin"]) && <TableHead className="w-[120px]">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -152,9 +227,35 @@ export default function Squads() {
                         <span className="text-muted-foreground text-sm">Área não informada</span>
                       )}
                     </TableCell>
+                    <TableCell>
+                      {squad.managerId ? (
+                        <Badge className="border-primary/30 bg-primary/10 text-primary" variant="outline">
+                          {managers.find((manager) => manager.id === squad.managerId)?.name ?? "Gestor removido"}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Gestão não atribuída</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {squad.description || "Sem descrição cadastrada."}
                     </TableCell>
+                    {hasPermission(["master", "admin"]) && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(squad)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(squad.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

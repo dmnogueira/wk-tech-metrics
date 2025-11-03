@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import Import from "./pages/Import";
 import Squads from "./pages/Squads";
 import Professionals from "./pages/Professionals";
+import JobRolesPage from "./pages/JobRoles";
+import Organogram from "./pages/Organogram";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -90,6 +92,22 @@ const App = () => (
               element={
                 <RequireAuth>
                   <Professionals />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/job-roles"
+              element={
+                <RequireAuth>
+                  <JobRolesPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/organogram"
+              element={
+                <RequireAuth>
+                  <Organogram />
                 </RequireAuth>
               }
             />

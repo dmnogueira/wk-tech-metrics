@@ -16,8 +16,7 @@ export function useProfessionals() {
           *,
           profile:profiles!professionals_profile_id_fkey(full_name, email, avatar_url),
           position:positions(name),
-          squad:squads(name),
-          manager:profiles!professionals_manager_id_fkey(full_name)
+          squad:squads(name)
         `)
         .order("created_at", { ascending: false });
 
@@ -123,21 +122,26 @@ export function useProfessionals() {
       }
 
       // Inserir professional
-      const { error } = await supabase.from("professionals").insert({
-        profile_id: profileId,
-        position_id: positionId,
-        squad_id: squadId,
-        seniority: professional.seniority,
-        avatar_url: professional.avatar,
-        profile_type: professional.profileType,
-        manager_id: professional.managerId || null,
-        managed_squads: professional.managedSquads || [],
-      });
+      const { data: inserted, error } = await supabase
+        .from("professionals")
+        .insert({
+          profile_id: profileId,
+          position_id: positionId,
+          squad_id: squadId,
+          seniority: professional.seniority,
+          avatar_url: professional.avatar,
+          profile_type: professional.profileType,
+          manager_id: professional.managerId || null,
+          managed_squads: professional.managedSquads || [],
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
 
       toast.success("Profissional adicionado com sucesso");
       await fetchProfessionals();
+      return inserted?.id;
     } catch (error: any) {
       console.error("Error adding professional:", error);
       toast.error("Erro ao adicionar profissional");

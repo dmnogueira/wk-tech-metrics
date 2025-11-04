@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Briefcase, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
@@ -41,12 +42,13 @@ export default function JobRolesPage() {
   const [formData, setFormData] = useState<Omit<JobRole, "id">>({
     title: "",
     description: "",
+    isManagement: false,
   });
 
   const canManageRoles = hasPermission(["master", "admin"]);
 
   const resetForm = () => {
-    setFormData({ title: "", description: "" });
+    setFormData({ title: "", description: "", isManagement: false });
     setEditingRoleId(null);
   };
 
@@ -76,7 +78,7 @@ export default function JobRolesPage() {
   };
 
   const handleEdit = (role: JobRole) => {
-    setFormData({ title: role.title, description: role.description });
+    setFormData({ title: role.title, description: role.description, isManagement: role.isManagement || false });
     setEditingRoleId(role.id);
     setIsDialogOpen(true);
   };
@@ -155,6 +157,22 @@ export default function JobRolesPage() {
                     />
                   </div>
 
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="is-management">Cargo de gestão</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Marque se este cargo possui responsabilidades de gestão
+                      </p>
+                    </div>
+                    <Switch
+                      id="is-management"
+                      checked={formData.isManagement}
+                      onCheckedChange={(checked) =>
+                        setFormData((previous) => ({ ...previous, isManagement: checked }))
+                      }
+                    />
+                  </div>
+
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
                       Cancelar
@@ -190,6 +208,7 @@ export default function JobRolesPage() {
                 <TableRow>
                   <TableHead>Cargo / Função</TableHead>
                   <TableHead>Descrição</TableHead>
+                  <TableHead>Tipo</TableHead>
                   {canManageRoles && <TableHead className="w-[120px]">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -206,6 +225,11 @@ export default function JobRolesPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {role.description || "Sem descrição cadastrada."}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={role.isManagement ? "default" : "secondary"}>
+                        {role.isManagement ? "Gestão" : "Operacional"}
+                      </Badge>
                     </TableCell>
                     {canManageRoles && (
                       <TableCell>

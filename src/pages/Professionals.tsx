@@ -51,7 +51,9 @@ export default function Professionals() {
   const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
   const [isNewSquadDialogOpen, setIsNewSquadDialogOpen] = useState(false);
   const [isNewLeaderDialogOpen, setIsNewLeaderDialogOpen] = useState(false);
+  const [isNewManagementRoleDialogOpen, setIsNewManagementRoleDialogOpen] = useState(false);
   const [newRoleTitle, setNewRoleTitle] = useState("");
+  const [newManagementRoleTitle, setNewManagementRoleTitle] = useState("");
   const [newSquadData, setNewSquadData] = useState({ name: "", area: "" });
   const [newLeaderData, setNewLeaderData] = useState({ name: "", email: "", role: "" });
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
@@ -73,6 +75,14 @@ export default function Professionals() {
       .map((squad) => squad.name), 
     [squads]
   );
+
+  // Filtra profissionais com cargos de gestão
+  const managementProfessionals = useMemo(() => {
+    const managementRoles = new Set(
+      jobRoles.filter((role) => role.isManagement).map((role) => role.title)
+    );
+    return professionals.filter((p) => p.role && managementRoles.has(p.role));
+  }, [professionals, jobRoles]);
 
   // Hierarquia de cargos para ordenação
   const hierarchyOrder: Record<string, number> = {
@@ -142,12 +152,33 @@ export default function Professionals() {
       await addJobRole({
         title: newRoleTitle.trim(),
         description: "",
+        isManagement: false,
       });
       setFormData((prev) => ({ ...prev, role: newRoleTitle.trim() }));
       setNewRoleTitle("");
       setIsNewRoleDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
+    }
+  };
+
+  const handleAddNewManagementRole = async (roleTitle: string) => {
+    if (!roleTitle.trim()) {
+      toast.error("Informe o título do cargo.");
+      return false;
+    }
+    
+    try {
+      await addJobRole({
+        title: roleTitle.trim(),
+        description: "",
+        isManagement: true,
+      });
+      setNewLeaderData((prev) => ({ ...prev, role: roleTitle.trim() }));
+      return true;
+    } catch (error) {
+      // Toast já foi mostrado no hook
+      return false;
     }
   };
 
@@ -465,12 +496,12 @@ export default function Professionals() {
                         <span className="text-muted-foreground">Adicionar nova liderança</span>
                       </div>
                       <SelectItem value="none">Nenhuma liderança</SelectItem>
-                      {professionals.filter((p) => p.id !== editingProfessionalId).length === 0 ? (
+                      {managementProfessionals.filter((p) => p.id !== editingProfessionalId).length === 0 ? (
                         <SelectItem value="no-professionals" disabled>
-                          Nenhum profissional cadastrado
+                          Nenhum profissional com cargo de gestão cadastrado
                         </SelectItem>
                       ) : (
-                        professionals
+                        managementProfessionals
                           .filter((p) => p.id !== editingProfessionalId)
                           .map((professional) => (
                             <SelectItem key={professional.id} value={professional.id}>
@@ -640,6 +671,41 @@ export default function Professionals() {
             </DialogContent>
           </Dialog>
 
+          {/* Dialog para adicionar novo cargo de gestão */}
+          <Dialog open={isNewManagementRoleDialogOpen} onOpenChange={setIsNewManagementRoleDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Cargo de Gestão</DialogTitle>
+                <DialogDescription>
+                  Crie um novo cargo de gestão para a liderança.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-management-role-title">Título do Cargo</Label>
+                  <Input
+                    id="new-management-role-title"
+                    placeholder="Ex: Gerente de Projetos"
+                    value={newManagementRoleTitle}
+                    onChange={(e) => setNewManagementRoleTitle(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsNewManagementRoleDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={async () => {
+                  const success = await handleAddNewManagementRole(newManagementRoleTitle);
+                  if (success) {
+                    setNewManagementRoleTitle("");
+                    setIsNewManagementRoleDialogOpen(false);
+                  }
+                }}>Adicionar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {/* Dialog para adicionar novo squad */}
           <Dialog open={isNewSquadDialogOpen} onOpenChange={setIsNewSquadDialogOpen}>
             <DialogContent className="sm:max-w-md">
@@ -721,18 +787,24 @@ export default function Professionals() {
                         className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setIsNewRoleDialogOpen(true);
+                          setIsNewManagementRoleDialogOpen(true);
                         }}
                       >
                         <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">Adicionar novo cargo</span>
+                        <span className="text-muted-foreground">Adicionar novo cargo de gestão</span>
                       </div>
-                      {roleOptions.length === 0 ? (
+                      {roleOptions.filter((role) => {
+                        const jobRole = jobRoles.find((jr) => jr.title === role);
+                        return jobRole?.isManagement;
+                      }).length === 0 ? (
                         <SelectItem value="no-roles" disabled>
-                          Nenhum cargo cadastrado
+                          Nenhum cargo de gestão cadastrado
                         </SelectItem>
                       ) : (
-                        roleOptions.map((role) => (
+                        roleOptions.filter((role) => {
+                          const jobRole = jobRoles.find((jr) => jr.title === role);
+                          return jobRole?.isManagement;
+                        }).map((role) => (
                           <SelectItem key={role} value={role}>
                             {role}
                           </SelectItem>

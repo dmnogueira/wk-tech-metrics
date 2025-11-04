@@ -22,6 +22,7 @@ export function useJobRoles() {
         id: position.id,
         title: position.name,
         description: position.description || "",
+        isManagement: position.is_management || false,
       }));
 
       setJobRoles(mappedData);
@@ -62,6 +63,7 @@ export function useJobRoles() {
       const { error } = await supabase.from("positions").insert({
         name: jobRole.title,
         description: jobRole.description,
+        is_management: jobRole.isManagement || false,
       });
 
       if (error) throw error;
@@ -82,6 +84,7 @@ export function useJobRoles() {
         .update({
           ...(updates.title && { name: updates.title }),
           ...(updates.description !== undefined && { description: updates.description }),
+          ...(updates.isManagement !== undefined && { is_management: updates.isManagement }),
         })
         .eq("id", id);
 

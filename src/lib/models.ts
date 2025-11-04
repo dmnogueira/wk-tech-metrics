@@ -26,4 +26,5 @@ export interface JobRole {
   id: string;
   title: string;
   description?: string;
+  isManagement?: boolean;
 }

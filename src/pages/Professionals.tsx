@@ -63,6 +63,7 @@ export default function Professionals() {
   const [newSquadData, setNewSquadData] = useState({ name: "", area: "" });
   const [newLeaderData, setNewLeaderData] = useState({ name: "", email: "", role: "" });
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
+    profileId: "",
     name: "",
     email: "",
     role: "",
@@ -135,6 +136,7 @@ export default function Professionals() {
 
   const resetForm = () => {
     setFormData({
+      profileId: "",
       name: "",
       email: "",
       role: "",
@@ -227,6 +229,7 @@ export default function Professionals() {
     try {
       setIsAddingLeader(true);
       await addProfessional({
+        profileId: "", // Será gerado no backend
         name: newLeaderData.name.trim(),
         email: newLeaderData.email.trim(),
         role: newLeaderData.role.trim() || "Gestor",
@@ -294,6 +297,7 @@ export default function Professionals() {
 
   const handleEdit = (professional: Professional) => {
     setFormData({
+      profileId: professional.profileId,
       name: professional.name,
       email: professional.email,
       role: professional.role,

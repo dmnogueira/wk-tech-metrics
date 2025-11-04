@@ -25,6 +25,7 @@ export function useProfessionals() {
       // Mapeia os dados do Supabase para o modelo local
       const mappedData: Professional[] = (data || []).map((prof: any) => ({
         id: prof.id,
+        profileId: prof.profile_id,
         name: prof.profile?.full_name || "",
         email: prof.profile?.email || "",
         role: prof.position?.name || "",

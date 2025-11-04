@@ -11,6 +11,7 @@ export interface Squad {
 
 export interface Professional {
   id: string;
+  profileId: string; // ID do profile/usuário no auth
   name: string;
   email: string;
   role: string;

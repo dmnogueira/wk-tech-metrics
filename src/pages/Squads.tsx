@@ -243,7 +243,7 @@ export default function Squads() {
                         </SelectItem>
                       ) : (
                         managers.map((manager) => (
-                          <SelectItem key={manager.id} value={manager.id}>
+                          <SelectItem key={manager.id} value={manager.profileId}>
                             {manager.name}
                           </SelectItem>
                         ))
@@ -319,7 +319,7 @@ export default function Squads() {
                       </TableCell>
                       <TableCell>
                         {squad.managerId
-                          ? managers.find((m) => m.id === squad.managerId)?.name || (
+                          ? managers.find((m) => m.profileId === squad.managerId)?.name || (
                               <span className="text-muted-foreground text-sm">Gestão não atribuída</span>
                             )
                           : "Gestão não atribuída"}

@@ -41,6 +41,7 @@ export default function Organogram() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProfessionalId, setEditingProfessionalId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
+    profileId: "",
     name: "",
     email: "",
     role: "",
@@ -267,6 +268,7 @@ export default function Organogram() {
 
   const resetForm = () => {
     setFormData({
+      profileId: "",
       name: "",
       email: "",
       role: "",
@@ -281,6 +283,7 @@ export default function Organogram() {
 
   const handleEditProfessional = (professional: Professional) => {
     setFormData({
+      profileId: professional.profileId,
       name: professional.name,
       email: professional.email,
       role: professional.role,

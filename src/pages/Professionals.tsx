@@ -512,33 +512,34 @@ export default function Professionals() {
                           Nenhum Squad
                         </label>
                       </div>
-                      {squadOptions
-                        .filter((squadName) => squadName !== "Nenhum Squad")
-                        .map((squadName) => (
-                          <div key={squadName} className="flex items-center space-x-2">
+                      {squads
+                        .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+                        .filter((squad) => squad.name !== "Nenhum Squad")
+                        .map((squad) => (
+                          <div key={squad.name} className="flex items-center space-x-2">
                             <Checkbox
-                              id={`squad-${squadName}`}
-                              checked={formData.managedSquads?.includes(squadName)}
+                              id={`squad-${squad.name}`}
+                              checked={formData.managedSquads?.includes(squad.name)}
                               disabled={formData.managedSquads?.includes("Nenhum Squad")}
                               onCheckedChange={(checked) => {
                                 if (checked) {
                                   setFormData((previous) => ({
                                     ...previous,
-                                    managedSquads: [...(previous.managedSquads || []), squadName],
+                                    managedSquads: [...(previous.managedSquads || []), squad.name],
                                   }));
                                 } else {
                                   setFormData((previous) => ({
                                     ...previous,
-                                    managedSquads: previous.managedSquads?.filter((s) => s !== squadName) || [],
+                                    managedSquads: previous.managedSquads?.filter((s) => s !== squad.name) || [],
                                   }));
                                 }
                               }}
                             />
                             <label
-                              htmlFor={`squad-${squadName}`}
+                              htmlFor={`squad-${squad.name}`}
                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
-                              {squadName}
+                              {squad.name}
                             </label>
                           </div>
                         ))}

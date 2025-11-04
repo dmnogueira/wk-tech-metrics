@@ -275,34 +275,6 @@ export default function Professionals() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="professional-avatar">Foto do profissional</Label>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={formData.avatar} alt={formData.name} />
-                      <AvatarFallback>
-                        {formData.name
-                          .split(" ")
-                          .map((part) => part.charAt(0))
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2) || "PR"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Input
-                        id="professional-avatar"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Utilize imagens quadradas para melhor enquadramento. Elas serão exibidas em formato circular.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="professional-name">Nome completo</Label>
                   <Input
                     id="professional-name"
@@ -327,6 +299,36 @@ export default function Professionals() {
                     }
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-center block">Foto do profissional</Label>
+                  <div className="flex flex-col items-center gap-2">
+                    <input
+                      id="professional-avatar"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                    <Avatar 
+                      className="h-24 w-24 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => document.getElementById('professional-avatar')?.click()}
+                    >
+                      <AvatarImage src={formData.avatar} alt={formData.name} />
+                      <AvatarFallback>
+                        {formData.name
+                          .split(" ")
+                          .map((part) => part.charAt(0))
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2) || <UserCircle className="h-12 w-12" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Clique na foto para selecionar uma imagem
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">

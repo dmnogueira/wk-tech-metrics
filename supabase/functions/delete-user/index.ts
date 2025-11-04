@@ -112,7 +112,7 @@ serve(async (req) => {
       );
     }
 
-    // Delete in correct order: roles -> profile -> auth user
+    // Delete in correct order: roles -> auth user (which cascades to profile)
     console.log(`Deleting user_roles for ${userId}`);
     const { error: rolesDeleteError } = await supabaseAdmin
       .from("user_roles")
@@ -124,18 +124,7 @@ serve(async (req) => {
       throw rolesDeleteError;
     }
 
-    console.log(`Deleting profile for ${userId}`);
-    const { error: profileDeleteError } = await supabaseAdmin
-      .from("profiles")
-      .delete()
-      .eq("id", userId);
-
-    if (profileDeleteError) {
-      console.error("Error deleting profile:", profileDeleteError);
-      throw profileDeleteError;
-    }
-
-    console.log(`Deleting auth user ${userId}`);
+    console.log(`Deleting auth user ${userId} (will cascade to profile)`);
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authDeleteError) {

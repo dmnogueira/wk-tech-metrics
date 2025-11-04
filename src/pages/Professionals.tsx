@@ -709,12 +709,37 @@ export default function Professionals() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-leader-role">Cargo</Label>
-                  <Input
-                    id="new-leader-role"
-                    placeholder="Ex: Gerente de Projetos"
+                  <Select
                     value={newLeaderData.role}
-                    onChange={(e) => setNewLeaderData((prev) => ({ ...prev, role: e.target.value }))}
-                  />
+                    onValueChange={(value) => setNewLeaderData((prev) => ({ ...prev, role: value }))}
+                  >
+                    <SelectTrigger id="new-leader-role">
+                      <SelectValue placeholder="Selecione o cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsNewRoleDialogOpen(true);
+                        }}
+                      >
+                        <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Adicionar novo cargo</span>
+                      </div>
+                      {roleOptions.length === 0 ? (
+                        <SelectItem value="no-roles" disabled>
+                          Nenhum cargo cadastrado
+                        </SelectItem>
+                      ) : (
+                        roleOptions.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {role}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>

@@ -125,16 +125,16 @@ export default function Organogram() {
     showManagedSquads = true,
   }: ProfessionalCardProps) => {
     return (
-      <div className="relative rounded-lg border bg-card p-3 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
+      <div className="relative w-[220px] rounded-lg border border-primary/50 bg-primary/90 p-4 text-primary-foreground shadow-sm">
         <div className="flex items-start gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {canEditProfessionals && showDragHandle && (
-              <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
+              <GripVertical className="h-3 w-3 text-primary-foreground/70 shrink-0" />
             )}
 
-            <Avatar className="h-9 w-9 border border-primary/40">
+            <Avatar className="h-9 w-9 border border-primary-foreground/20 bg-primary-foreground/10">
               <AvatarImage src={professional.avatar} alt={professional.name} />
-              <AvatarFallback className="text-xs">
+              <AvatarFallback className="text-xs font-semibold text-primary">
                 {professional.name
                   .split(" ")
                   .map((part) => part.charAt(0))
@@ -145,15 +145,15 @@ export default function Organogram() {
             </Avatar>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">
+              <p className="text-sm font-semibold truncate">
                 {professional.name}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-[11px] text-primary-foreground/80 truncate">
                 {professional.role || "Função não definida"}
               </p>
 
               {professional.squad && (
-                <p className="mt-1 text-xs font-medium text-primary truncate">
+                <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-primary-foreground/70 truncate">
                   Squad: {professional.squad}
                 </p>
               )}
@@ -161,16 +161,19 @@ export default function Organogram() {
           </div>
 
           <div className="flex items-start gap-1">
-            <Badge variant="outline" className="text-xs px-1.5 py-0 border-info/40 text-info">
+            <Badge
+              variant="secondary"
+              className="bg-primary-foreground/20 text-[10px] uppercase tracking-wide text-primary-foreground"
+            >
               {professional.seniority}
             </Badge>
 
             {canEditProfessionals && (
-              <>
+              <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6"
+                  className="h-6 w-6 text-primary-foreground"
                   onClick={() => handleEditProfessional(professional)}
                 >
                   <Pencil className="h-3 w-3" />
@@ -178,12 +181,12 @@ export default function Organogram() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-destructive hover:text-destructive"
+                  className="h-6 w-6 text-primary-foreground"
                   onClick={() => handleDeleteProfessional(professional.id)}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -192,12 +195,14 @@ export default function Organogram() {
           professional.profileType === "gestao" &&
           professional.managedSquads &&
           professional.managedSquads.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-border/50">
+            <div className="mt-3 rounded-md border border-primary-foreground/10 bg-primary-foreground/10 p-2">
               <div className="flex items-center gap-1 flex-wrap">
-                <Briefcase className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Gerencia:</span>
+                <Briefcase className="h-3 w-3 text-primary-foreground/80" />
+                <span className="text-[10px] uppercase tracking-wide text-primary-foreground/80">
+                  Gerencia:
+                </span>
                 {professional.managedSquads.map((sq) => (
-                  <Badge key={sq} variant="secondary" className="text-xs px-1 py-0">
+                  <Badge key={sq} variant="secondary" className="bg-primary-foreground/20 text-[10px] text-primary-foreground">
                     {sq}
                   </Badge>
                 ))}
@@ -235,65 +240,82 @@ export default function Organogram() {
     level,
     excludeSquadNames,
   }: SquadNodeProps) => {
+    const [isOpen, setIsOpen] = useState(true);
+    const hasPeople = Boolean(coordinator) || members.length > 0;
+
     return (
-      <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Layers3 className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold text-primary">{squadName}</p>
-          <Badge variant="secondary" className="ml-auto text-[10px] uppercase bg-primary text-primary-foreground">
-            Squad
-          </Badge>
-        </div>
-
-        <div className="mt-3 space-y-3">
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Coordenador
-            </p>
-            {coordinator ? (
-              <HierarchyNode
-                professional={coordinator}
-                allProfessionals={allProfessionals}
-                level={level}
-                hideParentConnector
-                showManagedSquads={false}
-                showDragHandle={false}
-                excludeSquadNames={excludeSquadNames}
-              />
-            ) : (
-              <div className="text-xs text-muted-foreground border border-dashed border-border rounded-md px-3 py-2 bg-background/40">
-                Nenhum coordenador atribuído
-              </div>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <div className="relative w-[240px] rounded-xl border border-primary/50 bg-primary/10 p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            {hasPeople && (
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary">
+                  {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                </Button>
+              </CollapsibleTrigger>
             )}
+
+            <Layers3 className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold text-primary">{squadName}</p>
+            <Badge variant="secondary" className="ml-auto bg-primary text-[10px] font-semibold uppercase text-primary-foreground">
+              Squad
+            </Badge>
           </div>
 
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Profissionais
-            </p>
-            {members.length > 0 ? (
-              <div className="space-y-2">
-                {members.map((member) => (
-                  <HierarchyNode
-                    key={member.id}
-                    professional={member}
-                    allProfessionals={allProfessionals}
-                    level={level}
-                    hideParentConnector
-                    showManagedSquads={false}
-                    showDragHandle={false}
-                    excludeSquadNames={excludeSquadNames}
-                  />
-                ))}
+          {hasPeople && (
+            <CollapsibleContent>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Coordenador
+                  </p>
+                  {coordinator ? (
+                    <HierarchyNode
+                      professional={coordinator}
+                      allProfessionals={allProfessionals}
+                      level={level}
+                      hideParentConnector
+                      showManagedSquads={false}
+                      showDragHandle={false}
+                      excludeSquadNames={excludeSquadNames}
+                    />
+                  ) : (
+                    <div className="rounded-md border border-dashed border-border bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
+                      Nenhum coordenador atribuído
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Profissionais
+                  </p>
+                  {members.length > 0 ? (
+                    <div className="space-y-2">
+                      {members.map((member) => (
+                        <HierarchyNode
+                          key={member.id}
+                          professional={member}
+                          allProfessionals={allProfessionals}
+                          level={level}
+                          hideParentConnector
+                          showManagedSquads={false}
+                          showDragHandle={false}
+                          excludeSquadNames={excludeSquadNames}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-md border border-dashed border-border bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
+                      Nenhum profissional vinculado
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="text-xs text-muted-foreground border border-dashed border-border rounded-md px-3 py-2 bg-background/40">
-                Nenhum profissional vinculado
-              </div>
-            )}
-          </div>
+            </CollapsibleContent>
+          )}
         </div>
-      </div>
+      </Collapsible>
     );
   };
 
@@ -378,20 +400,26 @@ export default function Organogram() {
 
     const hasSubordinates = filteredSubordinates.length > 0 || squadStructures.length > 0;
 
+    const offsetClass = level > 0 && !hideParentConnector ? "ml-8" : "";
+    const childrenOffsetClass = level > 0 && !hideParentConnector ? "ml-16" : "ml-10";
+
     return (
       <div className="relative">
-        {level > 0 && !hideParentConnector && (
-          <div className="absolute left-4 top-0 w-px h-4 bg-border" />
-        )}
-
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <div className="flex items-start gap-1">
-            {hasSubordinates && (
+          <div className={`relative flex items-start gap-2 ${offsetClass}`}>
+            {level > 0 && !hideParentConnector && (
+              <>
+                <div className="absolute -left-6 top-3 bottom-1 border-l border-border/60" />
+                <div className="absolute -left-6 top-6 w-6 border-t border-border/60" />
+              </>
+            )}
+
+            {hasSubordinates ? (
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 shrink-0 mt-1"
+                  className="mt-1 h-6 w-6 shrink-0 text-primary"
                 >
                   {isOpen ? (
                     <ChevronDown className="h-3 w-3" />
@@ -400,11 +428,11 @@ export default function Organogram() {
                   )}
                 </Button>
               </CollapsibleTrigger>
+            ) : (
+              <div className="mt-1 h-6 w-6" />
             )}
-            {!hasSubordinates && <div className="w-6" />}
 
-            {/* Card compacto do profissional */}
-            <div className="flex-1 mb-2 max-w-md">
+            <div className="relative mb-4">
               <ProfessionalCard
                 professional={professional}
                 showDragHandle={showDragHandle}
@@ -413,11 +441,10 @@ export default function Organogram() {
             </div>
           </div>
 
-          {/* Subordinados */}
           {hasSubordinates && (
             <CollapsibleContent>
-              <div className="ml-6 space-y-1 relative">
-                <div className="absolute left-4 top-0 bottom-2 w-px bg-border" />
+              <div className={`relative ${childrenOffsetClass} mt-2 pl-8`}>
+                <div className="absolute left-0 top-0 bottom-0 border-l border-border/60" />
 
                 {[
                   ...filteredSubordinates.map((subordinate) => ({
@@ -445,8 +472,8 @@ export default function Organogram() {
                     ),
                   })),
                 ].map((child) => (
-                  <div key={child.key} className="relative">
-                    <div className="absolute left-4 top-4 w-4 h-px bg-border" />
+                  <div key={child.key} className="relative pb-6 last:pb-0">
+                    <div className="absolute -left-8 top-6 w-8 border-t border-border/60" />
                     {child.node}
                   </div>
                 ))}

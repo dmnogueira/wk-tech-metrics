@@ -112,7 +112,7 @@ serve(async (req) => {
       );
     }
 
-    // Delete in correct order: roles -> auth user (which cascades to profile)
+    // Delete in correct order: roles -> auth user (idempotent) -> profile cleanup
     console.log(`Deleting user_roles for ${userId}`);
     const { error: rolesDeleteError } = await supabaseAdmin
       .from("user_roles")
@@ -124,12 +124,31 @@ serve(async (req) => {
       throw rolesDeleteError;
     }
 
-    console.log(`Deleting auth user ${userId} (will cascade to profile)`);
+    console.log(`Deleting auth user ${userId}`);
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authDeleteError) {
-      console.error("Error deleting auth user:", authDeleteError);
-      throw authDeleteError;
+      // If user is already gone in auth, treat as success and continue cleanup
+      const status = (authDeleteError as any)?.status;
+      const code = (authDeleteError as any)?.code;
+      if (status === 404 || code === "user_not_found") {
+        console.warn(`Auth user ${userId} not found; continuing cleanup`);
+      } else {
+        console.error("Error deleting auth user:", authDeleteError);
+        throw authDeleteError;
+      }
+    }
+
+    // Ensure profile is removed even if no FK cascade exists
+    console.log(`Deleting profile for ${userId} (cleanup)`);
+    const { error: profileDeleteError } = await supabaseAdmin
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (profileDeleteError) {
+      console.error("Error deleting profile:", profileDeleteError);
+      throw profileDeleteError;
     }
 
     console.log(`User ${userId} successfully deleted by admin ${user.email}`);

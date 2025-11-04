@@ -81,9 +81,13 @@ export function useProfessionals() {
       let profileId = existingProfile?.id;
 
       if (!profileId) {
+        // Gerar um UUID para o novo profile
+        const newProfileId = crypto.randomUUID();
+        
         const { data: newProfile, error: profileError } = await supabase
           .from("profiles")
           .insert({
+            id: newProfileId,
             full_name: professional.name,
             email: professional.email,
             avatar_url: professional.avatar || null,

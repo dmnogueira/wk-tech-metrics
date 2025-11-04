@@ -28,15 +28,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { hasPermission } from "@/lib/auth";
 import { JobRole } from "@/lib/models";
-
-const createId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Date.now().toString();
+import { useJobRoles } from "@/hooks/use-job-roles";
 
 export default function JobRolesPage() {
-  const [roles, setRoles] = useLocalStorage<JobRole[]>("job-roles", []);
+  const { jobRoles, isLoading, addJobRole, updateJobRole, deleteJobRole } = useJobRoles();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
@@ -53,7 +50,7 @@ export default function JobRolesPage() {
     setEditingRoleId(null);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!formData.title.trim()) {
@@ -61,28 +58,21 @@ export default function JobRolesPage() {
       return;
     }
 
-    setIsSaving(true);
-    
-    // Simula um pequeno delay para feedback visual
-    setTimeout(() => {
+    try {
+      setIsSaving(true);
       if (editingRoleId) {
-        setRoles((previous) =>
-          previous.map((role) => (role.id === editingRoleId ? { ...role, ...formData } : role)),
-        );
-        toast.success("Cargo atualizado com sucesso!");
+        await updateJobRole(editingRoleId, formData);
       } else {
-        const newRole: JobRole = {
-          id: createId(),
-          ...formData,
-        };
-        setRoles((previous) => [...previous, newRole]);
-        toast.success("Cargo cadastrado com sucesso!");
+        await addJobRole(formData);
       }
-
+      
       resetForm();
       setIsDialogOpen(false);
+    } catch (error) {
+      // Toast já foi mostrado no hook
+    } finally {
       setIsSaving(false);
-    }, 300);
+    }
   };
 
   const handleEdit = (role: JobRole) => {
@@ -91,11 +81,14 @@ export default function JobRolesPage() {
     setIsDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteRoleId) {
-      setRoles((previous) => previous.filter((role) => role.id !== deleteRoleId));
-      toast.success("Cargo removido com sucesso!");
-      setDeleteRoleId(null);
+      try {
+        await deleteJobRole(deleteRoleId);
+        setDeleteRoleId(null);
+      } catch (error) {
+        // Toast já foi mostrado no hook
+      }
     }
   };
 
@@ -183,7 +176,14 @@ export default function JobRolesPage() {
           )}
         </div>
 
-        {roles.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Carregando cargos...</p>
+            </div>
+          </div>
+        ) : jobRoles.length > 0 ? (
           <Card className="p-0">
             <Table>
               <TableHeader>
@@ -194,7 +194,7 @@ export default function JobRolesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {roles.map((role) => (
+                {jobRoles.map((role) => (
                   <TableRow key={role.id}>
                     <TableCell className="font-medium text-foreground">
                       <div className="flex items-center gap-3">

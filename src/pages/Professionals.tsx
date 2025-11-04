@@ -45,6 +45,7 @@ export default function Professionals() {
   const { jobRoles, addJobRole } = useJobRoles();
   const { squads, addSquad } = useSquads();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingProfessionalId, setEditingProfessionalId] = useState<string | null>(null);
   const [deleteProfessionalId, setDeleteProfessionalId] = useState<string | null>(null);
   const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
@@ -177,6 +178,7 @@ export default function Professionals() {
     }
 
     try {
+      setIsSaving(true);
       if (editingProfessionalId) {
         await updateProfessional(editingProfessionalId, formData);
       } else {
@@ -187,6 +189,8 @@ export default function Professionals() {
       setIsDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -548,10 +552,19 @@ export default function Professionals() {
                 )}
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
                     Cancelar
                   </Button>
-                  <Button type="submit">{editingProfessionalId ? "Salvar alterações" : "Salvar Profissional"}</Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                        Salvando...
+                      </>
+                    ) : (
+                      editingProfessionalId ? "Salvar alterações" : "Salvar Profissional"
+                    )}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>

@@ -44,6 +44,7 @@ export default function Squads() {
   const { squads, isLoading, addSquad, updateSquad, deleteSquad } = useSquads();
   const { professionals } = useProfessionals();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingSquadId, setEditingSquadId] = useState<string | null>(null);
   const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Squad, "id">>({
@@ -84,6 +85,7 @@ export default function Squads() {
     }
 
     try {
+      setIsSaving(true);
       if (editingSquadId) {
         await updateSquad(editingSquadId, formData);
       } else {
@@ -95,6 +97,8 @@ export default function Squads() {
       setIsDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -262,10 +266,19 @@ export default function Squads() {
                 </div>
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
                     Cancelar
                   </Button>
-                  <Button type="submit">{editingSquadId ? "Salvar alterações" : "Salvar Squad"}</Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                        Salvando...
+                      </>
+                    ) : (
+                      editingSquadId ? "Salvar alterações" : "Salvar Squad"
+                    )}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>

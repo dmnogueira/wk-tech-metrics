@@ -38,6 +38,7 @@ const createId = () =>
 export default function JobRolesPage() {
   const [roles, setRoles] = useLocalStorage<JobRole[]>("job-roles", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [deleteRoleId, setDeleteRoleId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<JobRole, "id">>({
@@ -60,22 +61,28 @@ export default function JobRolesPage() {
       return;
     }
 
-    if (editingRoleId) {
-      setRoles((previous) =>
-        previous.map((role) => (role.id === editingRoleId ? { ...role, ...formData } : role)),
-      );
-      toast.success("Cargo atualizado com sucesso!");
-    } else {
-      const newRole: JobRole = {
-        id: createId(),
-        ...formData,
-      };
-      setRoles((previous) => [...previous, newRole]);
-      toast.success("Cargo cadastrado com sucesso!");
-    }
+    setIsSaving(true);
+    
+    // Simula um pequeno delay para feedback visual
+    setTimeout(() => {
+      if (editingRoleId) {
+        setRoles((previous) =>
+          previous.map((role) => (role.id === editingRoleId ? { ...role, ...formData } : role)),
+        );
+        toast.success("Cargo atualizado com sucesso!");
+      } else {
+        const newRole: JobRole = {
+          id: createId(),
+          ...formData,
+        };
+        setRoles((previous) => [...previous, newRole]);
+        toast.success("Cargo cadastrado com sucesso!");
+      }
 
-    resetForm();
-    setIsDialogOpen(false);
+      resetForm();
+      setIsDialogOpen(false);
+      setIsSaving(false);
+    }, 300);
   };
 
   const handleEdit = (role: JobRole) => {
@@ -156,10 +163,19 @@ export default function JobRolesPage() {
                   </div>
 
                   <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
                       Cancelar
                     </Button>
-                    <Button type="submit">{editingRoleId ? "Salvar alterações" : "Salvar cargo"}</Button>
+                    <Button type="submit" disabled={isSaving}>
+                      {isSaving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                          Salvando...
+                        </>
+                      ) : (
+                        editingRoleId ? "Salvar alterações" : "Salvar cargo"
+                      )}
+                    </Button>
                   </DialogFooter>
                 </form>
               </DialogContent>

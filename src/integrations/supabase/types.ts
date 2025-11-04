@@ -43,8 +43,11 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           id: string
+          managed_squads: string[] | null
+          manager_id: string | null
           position_id: string | null
           profile_id: string
+          profile_type: string | null
           seniority: string | null
           squad_id: string | null
           updated_at: string | null
@@ -53,8 +56,11 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           id?: string
+          managed_squads?: string[] | null
+          manager_id?: string | null
           position_id?: string | null
           profile_id: string
+          profile_type?: string | null
           seniority?: string | null
           squad_id?: string | null
           updated_at?: string | null
@@ -63,13 +69,23 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           id?: string
+          managed_squads?: string[] | null
+          manager_id?: string | null
           position_id?: string | null
           profile_id?: string
+          profile_type?: string | null
           seniority?: string | null
           squad_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "professionals_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "professionals_position_id_fkey"
             columns: ["position_id"]

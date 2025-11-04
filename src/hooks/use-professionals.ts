@@ -30,10 +30,10 @@ export function useProfessionals() {
         role: prof.position?.name || "",
         squad: prof.squad?.name || "",
         seniority: prof.seniority || "Pleno",
-        profileType: "colaborador" as const,
+        profileType: (prof.profile_type || "colaborador") as Professional["profileType"],
         avatar: prof.avatar_url || prof.profile?.avatar_url,
-        managerId: undefined, // Por enquanto não mapeamos hierarquia
-        managedSquads: [],
+        managerId: prof.manager_id,
+        managedSquads: prof.managed_squads || [],
       }));
 
       setProfessionals(mappedData);
@@ -124,6 +124,9 @@ export function useProfessionals() {
         squad_id: squadId,
         seniority: professional.seniority,
         avatar_url: professional.avatar,
+        profile_type: professional.profileType,
+        manager_id: professional.managerId || null,
+        managed_squads: professional.managedSquads || [],
       });
 
       if (error) throw error;
@@ -171,7 +174,10 @@ export function useProfessionals() {
           ...(positionId !== undefined && { position_id: positionId }),
           ...(squadId !== undefined && { squad_id: squadId }),
           ...(updates.seniority && { seniority: updates.seniority }),
-          ...(updates.avatar && { avatar_url: updates.avatar }),
+          ...(updates.avatar !== undefined && { avatar_url: updates.avatar }),
+          ...(updates.profileType && { profile_type: updates.profileType }),
+          ...(updates.managerId !== undefined && { manager_id: updates.managerId }),
+          ...(updates.managedSquads !== undefined && { managed_squads: updates.managedSquads }),
         })
         .eq("id", id);
 

@@ -14,9 +14,10 @@ export function useProfessionals() {
         .from("professionals")
         .select(`
           *,
-          profile:profiles(full_name, email, avatar_url),
+          profile:profiles!professionals_profile_id_fkey(full_name, email, avatar_url),
           position:positions(name),
-          squad:squads(name)
+          squad:squads(name),
+          manager:profiles!professionals_manager_id_fkey(full_name)
         `)
         .order("created_at", { ascending: false });
 

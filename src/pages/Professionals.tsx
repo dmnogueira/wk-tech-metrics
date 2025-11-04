@@ -275,33 +275,6 @@ export default function Professionals() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="professional-name">Nome completo</Label>
-                  <Input
-                    id="professional-name"
-                    placeholder="Ex: João Pereira"
-                    value={formData.name}
-                    onChange={(event) =>
-                      setFormData((previous) => ({ ...previous, name: event.target.value }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="professional-email">E-mail</Label>
-                  <Input
-                    id="professional-email"
-                    type="email"
-                    placeholder="nome.sobrenome@wk.com.br"
-                    value={formData.email}
-                    onChange={(event) =>
-                      setFormData((previous) => ({ ...previous, email: event.target.value }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label className="text-center block">Foto do profissional</Label>
                   <div className="flex flex-col items-center gap-2">
                     <input
@@ -329,6 +302,33 @@ export default function Professionals() {
                       Clique na foto para selecionar uma imagem
                     </p>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="professional-name">Nome completo</Label>
+                  <Input
+                    id="professional-name"
+                    placeholder="Ex: João Pereira"
+                    value={formData.name}
+                    onChange={(event) =>
+                      setFormData((previous) => ({ ...previous, name: event.target.value }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="professional-email">E-mail</Label>
+                  <Input
+                    id="professional-email"
+                    type="email"
+                    placeholder="nome.sobrenome@wk.com.br"
+                    value={formData.email}
+                    onChange={(event) =>
+                      setFormData((previous) => ({ ...previous, email: event.target.value }))
+                    }
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">

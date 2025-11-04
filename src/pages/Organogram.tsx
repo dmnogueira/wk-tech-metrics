@@ -153,14 +153,9 @@ export default function Organogram() {
               </p>
 
               {professional.squad && (
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] uppercase tracking-wide border-primary/30 bg-primary/10 text-primary"
-                  >
-                    {professional.squad}
-                  </Badge>
-                </div>
+                <p className="mt-1 text-xs font-medium text-primary truncate">
+                  Squad: {professional.squad}
+                </p>
               )}
             </div>
           </div>

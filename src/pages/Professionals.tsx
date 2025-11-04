@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, UserCircle, Pencil, Trash2, PlusCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,7 @@ export default function Professionals() {
   const [isAddingSquad, setIsAddingSquad] = useState(false);
   const [isAddingManagementRole, setIsAddingManagementRole] = useState(false);
   const [newRoleTitle, setNewRoleTitle] = useState("");
+  const [newRoleIsManagement, setNewRoleIsManagement] = useState(false);
   const [newManagementRoleTitle, setNewManagementRoleTitle] = useState("");
   const [newSquadData, setNewSquadData] = useState({ name: "", area: "" });
   const [newLeaderData, setNewLeaderData] = useState({ name: "", email: "", role: "" });
@@ -157,10 +159,11 @@ export default function Professionals() {
       await addJobRole({
         title: newRoleTitle.trim(),
         description: "",
-        isManagement: false,
+        isManagement: newRoleIsManagement,
       });
       setFormData((prev) => ({ ...prev, role: newRoleTitle.trim() }));
       setNewRoleTitle("");
+      setNewRoleIsManagement(false);
       setIsNewRoleDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
@@ -675,6 +678,19 @@ export default function Professionals() {
                     placeholder="Ex: Desenvolvedor Full Stack"
                     value={newRoleTitle}
                     onChange={(e) => setNewRoleTitle(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="is-management">Cargo de Gestão</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Marque se este cargo é de liderança
+                    </p>
+                  </div>
+                  <Switch
+                    id="is-management"
+                    checked={newRoleIsManagement}
+                    onCheckedChange={setNewRoleIsManagement}
                   />
                 </div>
               </div>

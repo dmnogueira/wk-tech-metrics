@@ -24,18 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Pencil,
-  Trash2,
-  Users2,
-  UserCog,
-  ChevronDown,
-  ChevronRight,
-  GripVertical,
-  Briefcase,
-  Plus,
-  Layers3,
-} from "lucide-react";
+import { Pencil, Trash2, Users2, UserCog, ChevronDown, ChevronRight, GripVertical, Briefcase, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { hasPermission } from "@/lib/auth";
 import { Professional } from "@/lib/models";
@@ -113,223 +102,16 @@ export default function Organogram() {
     return { allProfessionals: filteredPros, rootProfessionals };
   }, [professionals, squads, selectedSquadId]);
 
-  interface ProfessionalCardProps {
-    professional: Professional;
-    showDragHandle?: boolean;
-    showManagedSquads?: boolean;
-  }
-
-  const ProfessionalCard = ({
-    professional,
-    showDragHandle = true,
-    showManagedSquads = true,
-  }: ProfessionalCardProps) => {
-    return (
-      <div className="relative w-[220px] rounded-lg border border-primary/50 bg-primary/90 p-4 text-primary-foreground shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {canEditProfessionals && showDragHandle && (
-              <GripVertical className="h-3 w-3 text-primary-foreground/70 shrink-0" />
-            )}
-
-            <Avatar className="h-9 w-9 border border-primary-foreground/20 bg-primary-foreground/10">
-              <AvatarImage src={professional.avatar} alt={professional.name} />
-              <AvatarFallback className="text-xs font-semibold text-primary">
-                {professional.name
-                  .split(" ")
-                  .map((part) => part.charAt(0))
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">
-                {professional.name}
-              </p>
-              <p className="text-[11px] text-primary-foreground/80 truncate">
-                {professional.role || "Função não definida"}
-              </p>
-
-              {professional.squad && (
-                <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-primary-foreground/70 truncate">
-                  Squad: {professional.squad}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-1">
-            <Badge
-              variant="secondary"
-              className="bg-primary-foreground/20 text-[10px] uppercase tracking-wide text-primary-foreground"
-            >
-              {professional.seniority}
-            </Badge>
-
-            {canEditProfessionals && (
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-primary-foreground"
-                  onClick={() => handleEditProfessional(professional)}
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-primary-foreground"
-                  onClick={() => handleDeleteProfessional(professional.id)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {showManagedSquads &&
-          professional.profileType === "gestao" &&
-          professional.managedSquads &&
-          professional.managedSquads.length > 0 && (
-            <div className="mt-3 rounded-md border border-primary-foreground/10 bg-primary-foreground/10 p-2">
-              <div className="flex items-center gap-1 flex-wrap">
-                <Briefcase className="h-3 w-3 text-primary-foreground/80" />
-                <span className="text-[10px] uppercase tracking-wide text-primary-foreground/80">
-                  Gerencia:
-                </span>
-                {professional.managedSquads.map((sq) => (
-                  <Badge key={sq} variant="secondary" className="bg-primary-foreground/20 text-[10px] text-primary-foreground">
-                    {sq}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-      </div>
-    );
-  };
-
+  // Componente simplificado para renderizar profissionais
   interface HierarchyNodeProps {
     professional: Professional;
     allProfessionals: Professional[];
     level: number;
-    hideParentConnector?: boolean;
-    showManagedSquads?: boolean;
-    showDragHandle?: boolean;
-    excludeSquadNames?: string[];
   }
 
-  interface SquadNodeProps {
-    squadName: string;
-    coordinator?: Professional;
-    members: Professional[];
-    allProfessionals: Professional[];
-    level: number;
-    excludeSquadNames: string[];
-  }
-
-  const SquadNode = ({
-    squadName,
-    coordinator,
-    members,
-    allProfessionals,
-    level,
-    excludeSquadNames,
-  }: SquadNodeProps) => {
+  const HierarchyNode = ({ professional, allProfessionals, level }: HierarchyNodeProps) => {
     const [isOpen, setIsOpen] = useState(true);
-    const hasPeople = Boolean(coordinator) || members.length > 0;
-
-    return (
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div className="relative w-[240px] rounded-xl border border-primary/50 bg-primary/10 p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            {hasPeople && (
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary">
-                  {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                </Button>
-              </CollapsibleTrigger>
-            )}
-
-            <Layers3 className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold text-primary">{squadName}</p>
-            <Badge variant="secondary" className="ml-auto bg-primary text-[10px] font-semibold uppercase text-primary-foreground">
-              Squad
-            </Badge>
-          </div>
-
-          {hasPeople && (
-            <CollapsibleContent>
-              <div className="mt-3 space-y-3">
-                <div>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Coordenador
-                  </p>
-                  {coordinator ? (
-                    <HierarchyNode
-                      professional={coordinator}
-                      allProfessionals={allProfessionals}
-                      level={level}
-                      hideParentConnector
-                      showManagedSquads={false}
-                      showDragHandle={false}
-                      excludeSquadNames={excludeSquadNames}
-                    />
-                  ) : (
-                    <div className="rounded-md border border-dashed border-border bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
-                      Nenhum coordenador atribuído
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Profissionais
-                  </p>
-                  {members.length > 0 ? (
-                    <div className="space-y-2">
-                      {members.map((member) => (
-                        <HierarchyNode
-                          key={member.id}
-                          professional={member}
-                          allProfessionals={allProfessionals}
-                          level={level}
-                          hideParentConnector
-                          showManagedSquads={false}
-                          showDragHandle={false}
-                          excludeSquadNames={excludeSquadNames}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-md border border-dashed border-border bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
-                      Nenhum profissional vinculado
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CollapsibleContent>
-          )}
-        </div>
-      </Collapsible>
-    );
-  };
-
-  const HierarchyNode = ({
-    professional,
-    allProfessionals,
-    level,
-    hideParentConnector = false,
-    showManagedSquads = true,
-    showDragHandle = true,
-    excludeSquadNames = [],
-  }: HierarchyNodeProps) => {
-    const [isOpen, setIsOpen] = useState(true);
-
+    
     // Encontra os subordinados diretos
     const subordinates = allProfessionals
       .filter((p) => p.managerId === professional.id)
@@ -340,86 +122,40 @@ export default function Organogram() {
         return a.name.localeCompare(b.name);
       });
 
-    const validManagedSquads = professional.profileType === "gestao"
-      ? (professional.managedSquads || []).filter(
-          (squadName) =>
-            squadName &&
-            squadName !== "Nenhum Squad" &&
-            !excludeSquadNames.includes(squadName)
+    // Para perfis de gestão, também inclui os profissionais dos squads gerenciados
+    const managedSquadMembers = professional.profileType === "gestao" && professional.managedSquads
+      ? allProfessionals.filter((p) => 
+          professional.managedSquads?.includes(p.squad) && 
+          p.id !== professional.id &&
+          !p.managerId
         )
       : [];
 
-    const squadStructures = validManagedSquads.map((squadName) => {
-      const squadInfo = squads.find((sq) => sq.name === squadName);
+    const allSubordinates = [...subordinates, ...managedSquadMembers]
+      .filter((p, index, self) => self.findIndex(s => s.id === p.id) === index)
+      .sort((a, b) => {
+        const levelA = getHierarchyLevel(a.role || "");
+        const levelB = getHierarchyLevel(b.role || "");
+        if (levelA !== levelB) return levelA - levelB;
+        return a.name.localeCompare(b.name);
+      });
 
-      const coordinatorFromSquad = squadInfo
-        ? allProfessionals.find((p) => p.profileId === squadInfo.managerId)
-        : undefined;
-
-      const fallbackCoordinator = allProfessionals
-        .filter((p) => p.managerId === professional.id && p.squad === squadName)
-        .sort((a, b) => {
-          const levelA = getHierarchyLevel(a.role || "");
-          const levelB = getHierarchyLevel(b.role || "");
-          if (levelA !== levelB) return levelA - levelB;
-          return a.name.localeCompare(b.name);
-        })[0];
-
-      const coordinator =
-        coordinatorFromSquad && coordinatorFromSquad.id !== professional.id
-          ? coordinatorFromSquad
-          : fallbackCoordinator;
-
-      const members = allProfessionals
-        .filter((p) => p.squad === squadName && p.id !== coordinator?.id && p.id !== professional.id)
-        .sort((a, b) => {
-          const levelA = getHierarchyLevel(a.role || "");
-          const levelB = getHierarchyLevel(b.role || "");
-          if (levelA !== levelB) return levelA - levelB;
-          return a.name.localeCompare(b.name);
-        });
-
-      const idsToOmit = new Set<string>();
-      if (coordinator) idsToOmit.add(coordinator.id);
-      members.forEach((member) => idsToOmit.add(member.id));
-
-      return {
-        squadName,
-        coordinator,
-        members,
-        idsToOmit,
-      };
-    });
-
-    const idsBelongingToSquads = new Set<string>();
-    squadStructures.forEach((structure) => {
-      structure.idsToOmit.forEach((id) => idsBelongingToSquads.add(id));
-    });
-
-    const filteredSubordinates = subordinates.filter((subordinate) => !idsBelongingToSquads.has(subordinate.id));
-
-    const hasSubordinates = filteredSubordinates.length > 0 || squadStructures.length > 0;
-
-    const offsetClass = level > 0 && !hideParentConnector ? "ml-8" : "";
-    const childrenOffsetClass = level > 0 && !hideParentConnector ? "ml-16" : "ml-10";
+    const hasSubordinates = allSubordinates.length > 0;
 
     return (
       <div className="relative">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <div className={`relative flex items-start gap-2 ${offsetClass}`}>
-            {level > 0 && !hideParentConnector && (
-              <>
-                <div className="absolute -left-6 top-3 bottom-1 border-l border-border/60" />
-                <div className="absolute -left-6 top-6 w-6 border-t border-border/60" />
-              </>
-            )}
+        {level > 0 && (
+          <div className="absolute left-4 top-0 w-px h-4 bg-border" />
+        )}
 
-            {hasSubordinates ? (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="flex items-start gap-1">
+            {hasSubordinates && (
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="mt-1 h-6 w-6 shrink-0 text-primary"
+                  className="h-6 w-6 shrink-0 mt-1"
                 >
                   {isOpen ? (
                     <ChevronDown className="h-3 w-3" />
@@ -428,53 +164,98 @@ export default function Organogram() {
                   )}
                 </Button>
               </CollapsibleTrigger>
-            ) : (
-              <div className="mt-1 h-6 w-6" />
             )}
+            {!hasSubordinates && <div className="w-6" />}
 
-            <div className="relative mb-4">
-              <ProfessionalCard
-                professional={professional}
-                showDragHandle={showDragHandle}
-                showManagedSquads={showManagedSquads}
-              />
+            {/* Card compacto do profissional */}
+            <div className="flex-1 mb-2 max-w-md">
+              <div className="relative rounded-lg border bg-card p-2 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
+                <div className="flex items-center gap-2">
+                  {canEditProfessionals && (
+                    <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
+                  )}
+                  
+                  <Avatar className="h-8 w-8 border border-primary/40">
+                    <AvatarImage src={professional.avatar} alt={professional.name} />
+                    <AvatarFallback className="text-xs">
+                      {professional.name
+                        .split(" ")
+                        .map((part) => part.charAt(0))
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {professional.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {professional.role || "Função não definida"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-info/40 text-info">
+                      {professional.seniority}
+                    </Badge>
+                    
+                    {canEditProfessionals && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleEditProfessional(professional)}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteProfessional(professional.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mostrar squads gerenciados se for perfil gestão */}
+                {professional.profileType === "gestao" && professional.managedSquads && professional.managedSquads.length > 0 && (
+                  <div className="mt-1 pt-1 border-t border-border/50">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Briefcase className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Gerencia:</span>
+                      {professional.managedSquads.map((sq) => (
+                        <Badge key={sq} variant="secondary" className="text-xs px-1 py-0">
+                          {sq}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* Subordinados */}
           {hasSubordinates && (
             <CollapsibleContent>
-              <div className={`relative ${childrenOffsetClass} mt-2 pl-8`}>
-                <div className="absolute left-0 top-0 bottom-0 border-l border-border/60" />
-
-                {[
-                  ...filteredSubordinates.map((subordinate) => ({
-                    key: subordinate.id,
-                    node: (
-                      <HierarchyNode
-                        professional={subordinate}
-                        allProfessionals={allProfessionals}
-                        level={level + 1}
-                        excludeSquadNames={excludeSquadNames}
-                      />
-                    ),
-                  })),
-                  ...squadStructures.map((structure) => ({
-                    key: `squad-${structure.squadName}`,
-                    node: (
-                      <SquadNode
-                        squadName={structure.squadName}
-                        coordinator={structure.coordinator}
-                        members={structure.members}
-                        allProfessionals={allProfessionals}
-                        level={level + 1}
-                        excludeSquadNames={[...excludeSquadNames, structure.squadName]}
-                      />
-                    ),
-                  })),
-                ].map((child) => (
-                  <div key={child.key} className="relative pb-6 last:pb-0">
-                    <div className="absolute -left-8 top-6 w-8 border-t border-border/60" />
-                    {child.node}
+              <div className="ml-6 space-y-1 relative">
+                <div className="absolute left-4 top-0 bottom-2 w-px bg-border" />
+                
+                {allSubordinates.map((subordinate) => (
+                  <div key={subordinate.id} className="relative">
+                    <div className="absolute left-4 top-4 w-4 h-px bg-border" />
+                    <HierarchyNode
+                      professional={subordinate}
+                      allProfessionals={allProfessionals}
+                      level={level + 1}
+                    />
                   </div>
                 ))}
               </div>

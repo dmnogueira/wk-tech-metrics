@@ -35,34 +35,23 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { hasPermission } from "@/lib/auth";
-import { Professional, Squad } from "@/lib/models";
-
-const createId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : Date.now().toString();
+import { Squad } from "@/lib/models";
+import { useSquads } from "@/hooks/use-squads";
+import { useProfessionals } from "@/hooks/use-professionals";
 
 export default function Squads() {
-  const [squads, setSquads] = useLocalStorage<Squad[]>("squads", []);
-  const [professionals, setProfessionals] = useLocalStorage<Professional[]>("professionals", []);
+  const { squads, isLoading, addSquad, updateSquad, deleteSquad } = useSquads();
+  const { professionals } = useProfessionals();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSquadId, setEditingSquadId] = useState<string | null>(null);
   const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
-  const [draggedSquadId, setDraggedSquadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<Squad, "id">>({
     name: "",
     area: "",
     description: "",
     managerId: undefined,
     order: undefined,
-  });
-  const [isNewManagerDialogOpen, setIsNewManagerDialogOpen] = useState(false);
-  const [newManagerData, setNewManagerData] = useState({
-    name: "",
-    email: "",
-    role: "",
   });
 
   // Ordena squads por ordem
@@ -74,7 +63,12 @@ export default function Squads() {
     });
   }, [squads]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  // Verifica se é o squad "Nenhum Squad" que não pode ser editado/deletado
+  const isProtectedSquad = (squadName: string) => {
+    return squadName === "Nenhum Squad";
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!formData.name.trim()) {
@@ -82,38 +76,26 @@ export default function Squads() {
       return;
     }
 
-    // Sempre usar o próximo número disponível para novos squads
-    let finalOrder = formData.order;
-    if (!editingSquadId) {
-      const maxOrder = Math.max(0, ...squads.map(s => s.order ?? 0));
-      finalOrder = maxOrder + 1;
-    } else {
-      // Para edição, garantir que tem um valor válido
-      if (!finalOrder || finalOrder <= 0) {
-        finalOrder = 1;
+    // Verifica se está tentando editar um squad protegido
+    const editingSquad = squads.find(s => s.id === editingSquadId);
+    if (editingSquad && isProtectedSquad(editingSquad.name)) {
+      toast.error("O squad 'Nenhum Squad' não pode ser editado.");
+      return;
+    }
+
+    try {
+      if (editingSquadId) {
+        await updateSquad(editingSquadId, formData);
+      } else {
+        await addSquad(formData);
       }
+      
+      setFormData({ name: "", area: "", description: "", managerId: undefined, order: undefined });
+      setEditingSquadId(null);
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Toast já foi mostrado no hook
     }
-
-    const buildSquad = (base: Omit<Squad, "id">, id?: string): Squad => ({
-      id: id ?? createId(),
-      ...base,
-      order: finalOrder,
-    });
-
-    if (editingSquadId) {
-      setSquads((previous) =>
-        previous.map((squad) => (squad.id === editingSquadId ? buildSquad(formData, editingSquadId) : squad)),
-      );
-      toast.success("Squad atualizado com sucesso!");
-    } else {
-      const newSquad = buildSquad(formData);
-      setSquads((previous) => [...previous, newSquad]);
-      toast.success("Squad criado com sucesso!");
-    }
-
-    setFormData({ name: "", area: "", description: "", managerId: undefined, order: undefined });
-    setEditingSquadId(null);
-    setIsDialogOpen(false);
   };
 
   const managers = useMemo(
@@ -123,6 +105,12 @@ export default function Squads() {
   );
 
   const handleEdit = (squad: Squad) => {
+    // Verifica se é um squad protegido
+    if (isProtectedSquad(squad.name)) {
+      toast.error("O squad 'Nenhum Squad' não pode ser editado.");
+      return;
+    }
+    
     setFormData({ 
       name: squad.name, 
       area: squad.area, 
@@ -134,119 +122,23 @@ export default function Squads() {
     setIsDialogOpen(true);
   };
 
-  const handleCreateNewManager = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmedName = newManagerData.name.trim();
-    const trimmedEmail = newManagerData.email.trim();
-    const trimmedRole = newManagerData.role.trim();
-
-    if (!trimmedName || !trimmedEmail) {
-      toast.error("Informe nome e e-mail do gestor.");
-      return;
-    }
-
-    const alreadyExists = professionals.some(
-      (professional) => professional.email.toLowerCase() === trimmedEmail.toLowerCase(),
-    );
-
-    if (alreadyExists) {
-      toast.error("Já existe um profissional cadastrado com este e-mail.");
-      return;
-    }
-
-    const newManager: Professional = {
-      id: createId(),
-      name: trimmedName,
-      email: trimmedEmail,
-      role: trimmedRole || "Gestor",
-      squad: "",
-      seniority: "Pleno",
-      profileType: "gestao",
-    };
-
-    setProfessionals((previous) => [...previous, newManager]);
-    setFormData((previous) => ({ ...previous, managerId: newManager.id }));
-    setIsNewManagerDialogOpen(false);
-    setNewManagerData({ name: "", email: "", role: "" });
-    toast.success("Gestor cadastrado com sucesso!");
-  };
-
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteSquadId) {
-      setSquads((previous) => previous.filter((squad) => squad.id !== deleteSquadId));
-      toast.success("Squad removido com sucesso!");
-      setDeleteSquadId(null);
+      // Verifica se é um squad protegido
+      const squadToDelete = squads.find(s => s.id === deleteSquadId);
+      if (squadToDelete && isProtectedSquad(squadToDelete.name)) {
+        toast.error("O squad 'Nenhum Squad' não pode ser deletado.");
+        setDeleteSquadId(null);
+        return;
+      }
+
+      try {
+        await deleteSquad(deleteSquadId);
+        setDeleteSquadId(null);
+      } catch (error) {
+        // Toast já foi mostrado no hook
+      }
     }
-  };
-
-  const handleDragStart = (squadId: string) => {
-    setDraggedSquadId(squadId);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (targetSquadId: string) => {
-    if (!draggedSquadId || draggedSquadId === targetSquadId) return;
-
-    const draggedIndex = sortedSquads.findIndex(s => s.id === draggedSquadId);
-    const targetIndex = sortedSquads.findIndex(s => s.id === targetSquadId);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    // Reordena o array
-    const newSquads = [...sortedSquads];
-    const [removed] = newSquads.splice(draggedIndex, 1);
-    newSquads.splice(targetIndex, 0, removed);
-
-    // Atualiza as ordens sequencialmente
-    const updatedSquads = newSquads.map((squad, index) => ({
-      ...squad,
-      order: index + 1
-    }));
-
-    setSquads(updatedSquads);
-    toast.success("Ordem atualizada!");
-    setDraggedSquadId(null);
-  };
-
-  const handleOrderChange = (squadId: string, newOrder: number) => {
-    if (!newOrder || newOrder <= 0) {
-      toast.error("O campo ordem deve ser maior que zero.");
-      return;
-    }
-
-    // Encontra o squad que está sendo alterado
-    const targetSquad = sortedSquads.find(s => s.id === squadId);
-    if (!targetSquad) return;
-
-    const oldOrder = targetSquad.order ?? 999;
-
-    // Reordena todos os squads
-    const updatedSquads = sortedSquads.map((squad) => {
-      if (squad.id === squadId) {
-        return { ...squad, order: newOrder };
-      }
-      
-      const currentOrder = squad.order ?? 999;
-      
-      // Se o novo valor é menor (movendo para cima)
-      if (newOrder < oldOrder && currentOrder >= newOrder && currentOrder < oldOrder) {
-        return { ...squad, order: currentOrder + 1 };
-      }
-      
-      // Se o novo valor é maior (movendo para baixo)
-      if (newOrder > oldOrder && currentOrder <= newOrder && currentOrder > oldOrder) {
-        return { ...squad, order: currentOrder - 1 };
-      }
-      
-      return squad;
-    });
-
-    setSquads(updatedSquads);
-    toast.success("Ordem atualizada!");
   };
 
   return (
@@ -341,16 +233,6 @@ export default function Squads() {
                       <SelectValue placeholder="Selecione o responsável pela gestão" />
                     </SelectTrigger>
                     <SelectContent>
-                      <div
-                        className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setIsNewManagerDialogOpen(true);
-                        }}
-                      >
-                        <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">Adicionar novo gestor</span>
-                      </div>
                       {managers.length === 0 ? (
                         <SelectItem value="no-managers" disabled>
                           Cadastre profissionais com perfil de gestão para selecionar aqui.
@@ -388,166 +270,80 @@ export default function Squads() {
               </form>
             </DialogContent>
           </Dialog>
-
-          <Dialog
-            open={isNewManagerDialogOpen}
-            onOpenChange={(open) => {
-              setIsNewManagerDialogOpen(open);
-              if (!open) {
-                setNewManagerData({ name: "", email: "", role: "" });
-              }
-            }}
-          >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Adicionar novo gestor</DialogTitle>
-                <DialogDescription>
-                  Cadastre rapidamente o responsável pela gestão deste squad.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={handleCreateNewManager} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-manager-name">Nome completo</Label>
-                  <Input
-                    id="new-manager-name"
-                    placeholder="Ex: Ana Oliveira"
-                    value={newManagerData.name}
-                    onChange={(event) =>
-                      setNewManagerData((previous) => ({ ...previous, name: event.target.value }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-manager-email">E-mail</Label>
-                  <Input
-                    id="new-manager-email"
-                    type="email"
-                    placeholder="nome.sobrenome@wk.com.br"
-                    value={newManagerData.email}
-                    onChange={(event) =>
-                      setNewManagerData((previous) => ({ ...previous, email: event.target.value }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-manager-role">Cargo / Função</Label>
-                  <Input
-                    id="new-manager-role"
-                    placeholder="Ex: Head de Tecnologia"
-                    value={newManagerData.role}
-                    onChange={(event) =>
-                      setNewManagerData((previous) => ({ ...previous, role: event.target.value }))
-                    }
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsNewManagerDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Adicionar gestor</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
 
-        {sortedSquads.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Carregando squads...</p>
+            </div>
+          </div>
+        ) : sortedSquads.length > 0 ? (
           <Card className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]"></TableHead>
-                  <TableHead className="w-[80px]">Ordem</TableHead>
                   <TableHead>Squad</TableHead>
                   <TableHead>Área</TableHead>
                   <TableHead>Gestão</TableHead>
                   <TableHead>Descrição</TableHead>
-                  {hasPermission(["master", "admin"]) && <TableHead className="w-[120px]">Ações</TableHead>}
+                  {hasPermission(["master", "admin"]) && <TableHead className="w-[120px] text-right">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedSquads.map((squad) => (
-                  <TableRow 
-                    key={squad.id}
-                    draggable
-                    onDragStart={() => handleDragStart(squad.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={() => handleDrop(squad.id)}
-                    className={`cursor-move ${draggedSquadId === squad.id ? 'opacity-50' : ''}`}
-                  >
-                    <TableCell>
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={squad.order ?? ""}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (!isNaN(value)) {
-                            handleOrderChange(squad.id, value);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (isNaN(value) || value <= 0) {
-                            const currentOrder = squad.order ?? 1;
-                            e.target.value = currentOrder.toString();
-                          }
-                        }}
-                        className="w-16 h-8"
-                        onClick={(e) => e.stopPropagation()}
-                        required
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium text-foreground">{squad.name}</TableCell>
-                    <TableCell>
-                      {squad.area ? (
-                        <Badge className="border-secondary/30 bg-secondary/10 text-secondary" variant="outline">
-                          {squad.area}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Área não informada</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {squad.managerId ? (
-                        <Badge className="border-primary/30 bg-primary/10 text-primary" variant="outline">
-                          {managers.find((manager) => manager.id === squad.managerId)?.name ?? "Gestor removido"}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Gestão não atribuída</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {squad.description || "Sem descrição cadastrada."}
-                    </TableCell>
-                    {hasPermission(["master", "admin"]) && (
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(squad)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteSquadId(squad.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                {sortedSquads.map((squad) => {
+                  const isProtected = isProtectedSquad(squad.name);
+                  return (
+                    <TableRow key={squad.id}>
+                      <TableCell className="font-medium">
+                        <Badge variant="secondary">{squad.name}</Badge>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      <TableCell>
+                        <Badge className="bg-primary/10 text-primary border-primary/20" variant="outline">
+                          {squad.area || "Não informado"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {squad.managerId
+                          ? managers.find((m) => m.id === squad.managerId)?.name || (
+                              <span className="text-muted-foreground text-sm">Gestão não atribuída</span>
+                            )
+                          : "Gestão não atribuída"}
+                      </TableCell>
+                      <TableCell className="max-w-md truncate">
+                        {squad.description || (
+                          <span className="text-muted-foreground text-sm">Sem descrição cadastrada.</span>
+                        )}
+                      </TableCell>
+                      {hasPermission(["master", "admin"]) && (
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(squad)}
+                              disabled={isProtected}
+                              title={isProtected ? "Squad protegido - não pode ser editado" : "Editar squad"}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteSquadId(squad.id)}
+                              className="text-destructive hover:text-destructive"
+                              disabled={isProtected}
+                              title={isProtected ? "Squad protegido - não pode ser deletado" : "Deletar squad"}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Card>

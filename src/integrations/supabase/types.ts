@@ -80,13 +80,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "professionals_manager_id_fkey"
-            columns: ["manager_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "professionals_position_id_fkey"
             columns: ["position_id"]
             isOneToOne: false

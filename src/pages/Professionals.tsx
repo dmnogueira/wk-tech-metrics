@@ -50,8 +50,10 @@ export default function Professionals() {
   const [deleteProfessionalId, setDeleteProfessionalId] = useState<string | null>(null);
   const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
   const [isNewSquadDialogOpen, setIsNewSquadDialogOpen] = useState(false);
+  const [isNewLeaderDialogOpen, setIsNewLeaderDialogOpen] = useState(false);
   const [newRoleTitle, setNewRoleTitle] = useState("");
   const [newSquadData, setNewSquadData] = useState({ name: "", area: "" });
+  const [newLeaderData, setNewLeaderData] = useState({ name: "", email: "", role: "" });
   const [formData, setFormData] = useState<Omit<Professional, "id">>({
     name: "",
     email: "",
@@ -166,6 +168,33 @@ export default function Professionals() {
       setIsNewSquadDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
+    }
+  };
+
+  const handleAddNewLeader = async () => {
+    if (!newLeaderData.name.trim() || !newLeaderData.email.trim()) {
+      toast.error("Informe o nome e e-mail da liderança.");
+      return;
+    }
+    
+    try {
+      await addProfessional({
+        name: newLeaderData.name.trim(),
+        email: newLeaderData.email.trim(),
+        role: newLeaderData.role.trim() || "Gestor",
+        squad: "",
+        seniority: "Sênior",
+        profileType: "gestao",
+        avatar: undefined,
+        managerId: undefined,
+        managedSquads: [],
+      });
+      
+      setNewLeaderData({ name: "", email: "", role: "" });
+      setIsNewLeaderDialogOpen(false);
+      toast.success("Liderança criada com sucesso! Selecione-a na lista.");
+    } catch (error) {
+      toast.error("Erro ao criar liderança");
     }
   };
 
@@ -425,6 +454,16 @@ export default function Professionals() {
                       <SelectValue placeholder="Selecione a liderança" />
                     </SelectTrigger>
                     <SelectContent>
+                      <div
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsNewLeaderDialogOpen(true);
+                        }}
+                      >
+                        <PlusCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Adicionar nova liderança</span>
+                      </div>
                       <SelectItem value="none">Nenhuma liderança</SelectItem>
                       {professionals.filter((p) => p.id !== editingProfessionalId).length === 0 ? (
                         <SelectItem value="no-professionals" disabled>
@@ -635,6 +674,54 @@ export default function Professionals() {
                   Cancelar
                 </Button>
                 <Button onClick={handleAddNewSquad}>Adicionar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog para adicionar nova liderança */}
+          <Dialog open={isNewLeaderDialogOpen} onOpenChange={setIsNewLeaderDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar Nova Liderança</DialogTitle>
+                <DialogDescription>
+                  Crie uma nova liderança para selecionar no cadastro.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-leader-name">Nome completo</Label>
+                  <Input
+                    id="new-leader-name"
+                    placeholder="Ex: Maria Silva"
+                    value={newLeaderData.name}
+                    onChange={(e) => setNewLeaderData((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-leader-email">E-mail</Label>
+                  <Input
+                    id="new-leader-email"
+                    type="email"
+                    placeholder="maria.silva@wk.com.br"
+                    value={newLeaderData.email}
+                    onChange={(e) => setNewLeaderData((prev) => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-leader-role">Cargo</Label>
+                  <Input
+                    id="new-leader-role"
+                    placeholder="Ex: Gerente de Projetos"
+                    value={newLeaderData.role}
+                    onChange={(e) => setNewLeaderData((prev) => ({ ...prev, role: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsNewLeaderDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddNewLeader}>Adicionar</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

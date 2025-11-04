@@ -52,6 +52,10 @@ export default function Professionals() {
   const [isNewSquadDialogOpen, setIsNewSquadDialogOpen] = useState(false);
   const [isNewLeaderDialogOpen, setIsNewLeaderDialogOpen] = useState(false);
   const [isNewManagementRoleDialogOpen, setIsNewManagementRoleDialogOpen] = useState(false);
+  const [isAddingLeader, setIsAddingLeader] = useState(false);
+  const [isAddingRole, setIsAddingRole] = useState(false);
+  const [isAddingSquad, setIsAddingSquad] = useState(false);
+  const [isAddingManagementRole, setIsAddingManagementRole] = useState(false);
   const [newRoleTitle, setNewRoleTitle] = useState("");
   const [newManagementRoleTitle, setNewManagementRoleTitle] = useState("");
   const [newSquadData, setNewSquadData] = useState({ name: "", area: "" });
@@ -149,6 +153,7 @@ export default function Professionals() {
     }
     
     try {
+      setIsAddingRole(true);
       await addJobRole({
         title: newRoleTitle.trim(),
         description: "",
@@ -159,6 +164,8 @@ export default function Professionals() {
       setIsNewRoleDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
+    } finally {
+      setIsAddingRole(false);
     }
   };
 
@@ -169,6 +176,7 @@ export default function Professionals() {
     }
     
     try {
+      setIsAddingManagementRole(true);
       await addJobRole({
         title: roleTitle.trim(),
         description: "",
@@ -179,6 +187,8 @@ export default function Professionals() {
     } catch (error) {
       // Toast já foi mostrado no hook
       return false;
+    } finally {
+      setIsAddingManagementRole(false);
     }
   };
 
@@ -189,6 +199,7 @@ export default function Professionals() {
     }
     
     try {
+      setIsAddingSquad(true);
       await addSquad({
         name: newSquadData.name.trim(),
         area: newSquadData.area.trim(),
@@ -199,6 +210,8 @@ export default function Professionals() {
       setIsNewSquadDialogOpen(false);
     } catch (error) {
       // Toast já foi mostrado no hook
+    } finally {
+      setIsAddingSquad(false);
     }
   };
 
@@ -209,6 +222,7 @@ export default function Professionals() {
     }
     
     try {
+      setIsAddingLeader(true);
       await addProfessional({
         name: newLeaderData.name.trim(),
         email: newLeaderData.email.trim(),
@@ -226,6 +240,8 @@ export default function Professionals() {
       toast.success("Liderança criada com sucesso! Selecione-a na lista.");
     } catch (error) {
       toast.error("Erro ao criar liderança");
+    } finally {
+      setIsAddingLeader(false);
     }
   };
 
@@ -663,10 +679,19 @@ export default function Professionals() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewRoleDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsNewRoleDialogOpen(false)} disabled={isAddingRole}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddNewRole}>Adicionar</Button>
+                <Button onClick={handleAddNewRole} disabled={isAddingRole}>
+                  {isAddingRole ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                      Adicionando...
+                    </>
+                  ) : (
+                    "Adicionar"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -692,7 +717,7 @@ export default function Professionals() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewManagementRoleDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsNewManagementRoleDialogOpen(false)} disabled={isAddingManagementRole}>
                   Cancelar
                 </Button>
                 <Button onClick={async () => {
@@ -701,7 +726,16 @@ export default function Professionals() {
                     setNewManagementRoleTitle("");
                     setIsNewManagementRoleDialogOpen(false);
                   }
-                }}>Adicionar</Button>
+                }} disabled={isAddingManagementRole}>
+                  {isAddingManagementRole ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                      Adicionando...
+                    </>
+                  ) : (
+                    "Adicionar"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -736,10 +770,19 @@ export default function Professionals() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewSquadDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsNewSquadDialogOpen(false)} disabled={isAddingSquad}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddNewSquad}>Adicionar</Button>
+                <Button onClick={handleAddNewSquad} disabled={isAddingSquad}>
+                  {isAddingSquad ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                      Adicionando...
+                    </>
+                  ) : (
+                    "Adicionar"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -815,10 +858,19 @@ export default function Professionals() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewLeaderDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsNewLeaderDialogOpen(false)} disabled={isAddingLeader}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddNewLeader}>Adicionar</Button>
+                <Button onClick={handleAddNewLeader} disabled={isAddingLeader}>
+                  {isAddingLeader ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                      Adicionando...
+                    </>
+                  ) : (
+                    "Adicionar"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

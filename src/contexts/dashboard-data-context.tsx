@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardData, defaultDashboardData } from "@/lib/dashboard-data";
+import { TablesInsert } from "@/integrations/supabase/types";
 
 type DashboardDataContextValue = {
   data: DashboardData;
@@ -22,6 +23,27 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       const { data: payload, error } = await supabase.rpc("get_dashboard_data");
 
       if (error) {
+        // Se a função RPC ainda não estiver disponível no PostgREST, usa o fallback direto na tabela
+        if (
+          error.message?.includes("get_dashboard_data") ||
+          error.message?.includes("schema cache")
+        ) {
+          const { data: rows, error: fallbackError } = await supabase
+            .from("dashboard_data")
+            .select("data")
+            .eq("id", "dashboard-config")
+            .maybeSingle();
+
+          if (fallbackError) {
+            console.error("Erro ao buscar dados do dashboard", fallbackError);
+            setData(defaultDashboardData);
+            return;
+          }
+
+          setData((rows?.data as DashboardData) ?? defaultDashboardData);
+          return;
+        }
+
         console.error("Erro ao buscar dados do dashboard", error);
         setData(defaultDashboardData);
         return;
@@ -47,6 +69,29 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     });
 
     if (error) {
+      if (
+        error.message?.includes("upsert_dashboard_data") ||
+        error.message?.includes("schema cache")
+      ) {
+        const payload: TablesInsert<"dashboard_data"> = {
+          id: "dashboard-config",
+          data: updatedData,
+        };
+
+        const { data: fallbackRows, error: fallbackError } = await supabase
+          .from("dashboard_data")
+          .upsert(payload, { onConflict: "id" })
+          .select("data")
+          .single();
+
+        if (fallbackError) {
+          throw new Error(fallbackError.message);
+        }
+
+        setData((fallbackRows?.data as DashboardData) ?? updatedData);
+        return;
+      }
+
       throw new Error(error.message);
     }
 

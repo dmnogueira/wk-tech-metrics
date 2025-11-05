@@ -3,15 +3,30 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+  LabelList,
+} from "recharts";
 import { Bug, AlertTriangle, Users, TrendingUp, Target, Code, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useDashboardData } from "@/contexts/dashboard-data-context";
 
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState("2025-09");
   const [selectedSquad, setSelectedSquad] = useState("all");
   const [compareWithPrevious, setCompareWithPrevious] = useState(true);
   const [chartsReady, setChartsReady] = useState(false);
+  const { data: dashboardData } = useDashboardData();
 
   // Habilita render dos charts após o primeiro paint para evitar travamentos
   // e reduzir custo de renderização inicial
@@ -20,53 +35,28 @@ export default function Dashboard() {
     return () => window.cancelAnimationFrame(id);
   }, []);
 
-  // Mock data para IR por Squad - memoizado para evitar re-renders
-  const irData = useMemo(() => [
-    { date: "01 Ago", Controladoria: 0.57, RH: 0.20, Empresarial: 0.20 },
-    { date: "08 Ago", Controladoria: 0.65, RH: 0.22, Empresarial: 0.24 },
-    { date: "15 Ago", Controladoria: 0.75, RH: 0.25, Empresarial: 0.26 },
-    { date: "22 Ago", Controladoria: 0.85, RH: 0.28, Empresarial: 0.28 },
-    { date: "01 Set", Controladoria: 1.00, RH: 0.30, Empresarial: 0.30 },
-  ], []);
+  const { cards, charts } = dashboardData;
 
-  // Mock data para Acompanhamento Mensal - memoizado
-  const monthlyData = useMemo(() => [
-    { month: "Jan", bugs: 120, issues: 45 },
-    { month: "Fev", bugs: 115, issues: 50 },
-    { month: "Mar", bugs: 108, issues: 42 },
-    { month: "Abr", bugs: 125, issues: 38 },
-    { month: "Mai", bugs: 95, issues: 55 },
-    { month: "Jun", bugs: 130, issues: 48 },
-    { month: "Jul", bugs: 85, issues: 52 },
-    { month: "Ago", bugs: 98, issues: 45 },
-    { month: "Set", bugs: 88, issues: 40 },
-  ], []);
+  const { squads, data: irEntries } = charts.irProjects;
 
-  // Mock data para Gestão de Crises - memoizado
-  const crisisData = useMemo(() => [
-    { month: "Jan", count: 6 },
-    { month: "Fev", count: 4 },
-    { month: "Mar", count: 9 },
-    { month: "Abr", count: 3 },
-    { month: "Mai", count: 15 },
-    { month: "Jun", count: 2 },
-    { month: "Jul", count: 3 },
-    { month: "Ago", count: 2 },
-    { month: "Set", count: 8 },
-  ], []);
+  const irData = useMemo(() => {
+    return irEntries.map((entry) => ({
+      month: entry.month,
+      ...entry.values,
+    }));
+  }, [irEntries]);
 
-  // Mock data para Cards de Bug por Score - memoizado
-  const bugScoreData = useMemo(() => [
-    { month: "Jan", score0: 0, score1: 21, score2: 34, score3: 28, score4: 18 },
-    { month: "Fev", score0: 0, score1: 26, score2: 38, score3: 30, score4: 22 },
-    { month: "Mar", score0: 0, score1: 24, score2: 36, score3: 32, score4: 20 },
-    { month: "Abr", score0: 0, score1: 28, score2: 40, score3: 34, score4: 24 },
-    { month: "Mai", score0: 0, score1: 22, score2: 32, score3: 28, score4: 18 },
-    { month: "Jun", score0: 0, score1: 30, score2: 48, score3: 38, score4: 28 },
-    { month: "Jul", score0: 0, score1: 26, score2: 42, score3: 36, score4: 24 },
-    { month: "Ago", score0: 0, score1: 28, score2: 44, score3: 38, score4: 26 },
-    { month: "Set", score0: 0, score1: 24, score2: 40, score3: 34, score4: 22 },
-  ], []);
+  const crisisData = charts.crisisManagement;
+  const monthlyData = charts.monthlyTracking;
+  const bugScoreData = charts.supportBugs;
+  const lastCrisisIndex = crisisData.length - 1;
+  const lineColors = [
+    "--chart-3",
+    "--chart-1",
+    "--chart-2",
+    "--chart-4",
+    "--chart-5",
+  ];
 
   return (
     <DashboardLayout>
@@ -96,8 +86,8 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <KPICard
               title="Bugs Críticos"
-              value={27}
-              subtitle="26% do total em setembro"
+              value={cards.criticalBugs.value}
+              subtitle={cards.criticalBugs.subtitle}
               badge={{ label: "Crítico", variant: "destructive" }}
               trend={{ value: "Sem alteração", direction: "neutral" }}
               status="critical"
@@ -106,8 +96,8 @@ export default function Dashboard() {
 
             <KPICard
               title="Retenção de Bugs"
-              value="42%"
-              subtitle="Agosto: 32%"
+              value={cards.bugRetention.value}
+              subtitle={cards.bugRetention.subtitle}
               badge={{ label: "Crítico", variant: "destructive" }}
               trend={{ value: "+10pp", direction: "up", isPositive: false }}
               status="critical"
@@ -115,11 +105,15 @@ export default function Dashboard() {
 
             <KPICard
               title="Bugs por Usuário"
-              value="0,28"
-              subtitle="2024: 0,31"
+              value={cards.bugsPerUser.value}
+              subtitle={cards.bugsPerUser.subtitle}
               badge={{ label: "KR", variant: "secondary" }}
-              trend={{ value: "-9% YoY", direction: "down", isPositive: true }}
-              goal="0,26"
+              trend={
+                cards.bugsPerUser.trend
+                  ? { value: cards.bugsPerUser.trend, direction: "down", isPositive: true }
+                  : undefined
+              }
+              goal={cards.bugsPerUser.goal}
               status="warning"
               icon={<Users className="h-5 w-5" />}
             />
@@ -156,7 +150,19 @@ export default function Dashboard() {
                       borderRadius: "var(--radius)",
                     }}
                   />
-                  <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                    {crisisData.map((entry, index) => (
+                      <Cell
+                        key={`crisis-${entry.month}-${index}`}
+                        fill={
+                          index === lastCrisisIndex
+                            ? "hsl(var(--chart-5))"
+                            : "hsl(var(--chart-3))"
+                        }
+                      />
+                    ))}
+                    <LabelList dataKey="count" position="top" fill="hsl(var(--foreground))" />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -178,7 +184,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={irData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
                     contentStyle={{
@@ -188,9 +194,16 @@ export default function Dashboard() {
                     }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="Controladoria" stroke="hsl(var(--chart-3))" strokeWidth={2} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="RH" stroke="hsl(var(--chart-1))" strokeWidth={2} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="Empresarial" stroke="hsl(var(--chart-2))" strokeWidth={2} isAnimationActive={false} />
+                  {squads.map((squad, index) => (
+                    <Line
+                      key={squad}
+                      type="monotone"
+                      dataKey={squad}
+                      stroke={`hsl(var(${lineColors[index % lineColors.length]}))`}
+                      strokeWidth={2}
+                      isAnimationActive={false}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -237,24 +250,27 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <KPICard
               title="Eficiência"
-              value="86%"
-              subtitle="Meta: 85%"
+              value={cards.efficiency.value}
+              subtitle={cards.efficiency.subtitle}
               badge={{ label: "KR", variant: "secondary" }}
-              trend={{ value: "+1%", direction: "up", isPositive: true }}
-              goal="85%"
-              progress={86}
+              trend={
+                cards.efficiency.trend
+                  ? { value: cards.efficiency.trend, direction: "up", isPositive: true }
+                  : undefined
+              }
+              goal={cards.efficiency.goal}
+              progress={cards.efficiency.progress}
               status="success"
               icon={<TrendingUp className="h-5 w-5" />}
             />
 
             <KPICard
               title="Backlog Refinado"
-              value="98%"
-              subtitle="Meta: 50%"
+              value={cards.refinedBacklog.value}
+              subtitle={cards.refinedBacklog.subtitle}
               badge={{ label: "KR", variant: "secondary" }}
-              trend={{ value: "+48%", direction: "up", isPositive: true }}
-              goal="50%"
-              progress={98}
+              goal={cards.refinedBacklog.goal}
+              progress={cards.refinedBacklog.progress}
               status="success"
             />
           </div>
@@ -264,12 +280,16 @@ export default function Dashboard() {
         <section>
           <KPICard
             title="Code Coverage APIs"
-            value="99,77%"
-            subtitle="Meta: 100%"
+            value={cards.codeCoverage.value}
+            subtitle={cards.codeCoverage.subtitle}
             badge={{ label: "Excelente", variant: "secondary", color: "success" }}
-            trend={{ value: "-0,23%", direction: "down", isPositive: false }}
-            goal="100%"
-            progress={99.77}
+            trend={
+              cards.codeCoverage.trend
+                ? { value: cards.codeCoverage.trend, direction: "down", isPositive: false }
+                : undefined
+            }
+            goal={cards.codeCoverage.goal}
+            progress={cards.codeCoverage.progress}
             status="success"
             icon={<Code className="h-5 w-5" />}
           />
@@ -317,27 +337,31 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <KPICard
               title="Disponibilidade"
-              value="99,9%"
-              subtitle="Meta: 99,9%"
+              value={cards.availability.value}
+              subtitle={cards.availability.subtitle}
               status="success"
-              progress={100}
+              progress={cards.availability.progress}
             />
 
             <KPICard
               title="MTTR"
-              value="18 min"
-              subtitle="Mean Time To Recovery"
+              value={cards.mttr.value}
+              subtitle={cards.mttr.subtitle}
               status="success"
             />
 
             <KPICard
               title="Iniciativas Técnicas"
-              value="9,25%"
-              subtitle="Meta: 7,5%"
+              value={cards.technicalInitiatives.value}
+              subtitle={cards.technicalInitiatives.subtitle}
               badge={{ label: "KR", variant: "secondary" }}
-              trend={{ value: "+23%", direction: "up", isPositive: true }}
-              goal="7,5%"
-              progress={123}
+              trend={
+                cards.technicalInitiatives.trend
+                  ? { value: cards.technicalInitiatives.trend, direction: "up", isPositive: true }
+                  : undefined
+              }
+              goal={cards.technicalInitiatives.goal}
+              progress={cards.technicalInitiatives.progress}
               status="success"
             />
           </div>

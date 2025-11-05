@@ -13,8 +13,9 @@ import Professionals from "./pages/Professionals";
 import JobRolesPage from "./pages/JobRoles";
 import Organogram from "./pages/Organogram";
 import Users from "./pages/Users";
-import Settings from "./pages/Settings";
+import DataPage from "./pages/Data";
 import NotFound from "./pages/NotFound";
+import { DashboardDataProvider } from "./contexts/dashboard-data-context";
 
 const queryClient = new QueryClient();
 
@@ -56,82 +57,84 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <Dashboard />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/import"
-              element={
-                <RequireAuth>
-                  <Import />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/squads"
-              element={
-                <RequireAuth>
-                  <Squads />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/professionals"
-              element={
-                <RequireAuth>
-                  <Professionals />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/job-roles"
-              element={
-                <RequireAuth>
-                  <JobRolesPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/organogram"
-              element={
-                <RequireAuth>
-                  <Organogram />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <RequireAuth>
-                  <Users />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <RequireAuth>
-                  <Settings />
-                </RequireAuth>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
+    <DashboardDataProvider>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Dashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/import"
+                element={
+                  <RequireAuth>
+                    <Import />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/squads"
+                element={
+                  <RequireAuth>
+                    <Squads />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/professionals"
+                element={
+                  <RequireAuth>
+                    <Professionals />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/job-roles"
+                element={
+                  <RequireAuth>
+                    <JobRolesPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/organogram"
+                element={
+                  <RequireAuth>
+                    <Organogram />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <RequireAuth>
+                    <Users />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/dados"
+                element={
+                  <RequireAuth>
+                    <DataPage />
+                  </RequireAuth>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </DashboardDataProvider>
   </QueryClientProvider>
 );
 

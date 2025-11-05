@@ -103,7 +103,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <Link to="/users" className="cursor-pointer">Usuários</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="cursor-pointer">Configurações</Link>
+                    <Link to="/dados" className="cursor-pointer">Dados</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

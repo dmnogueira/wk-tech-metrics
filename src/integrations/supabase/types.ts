@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      dashboard_data: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       positions: {
         Row: {
           created_at: string | null

@@ -16,22 +16,22 @@ export type Database = {
     Tables: {
       dashboard_data: {
         Row: {
-          created_at: string | null
+          created_at: string
           data: Json
           id: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           data: Json
           id?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           data?: Json
           id?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -217,10 +217,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_dashboard_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_dashboard_data: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -228,12 +225,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      upsert_dashboard_data: {
-        Args: {
-          p_data: Json
-        }
-        Returns: Json
-      }
+      upsert_dashboard_data: { Args: { p_data: Json }; Returns: Json }
     }
     Enums: {
       app_role: "master" | "admin" | "gestao" | "usuario"

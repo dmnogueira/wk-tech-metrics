@@ -287,7 +287,7 @@ export default function DataPage() {
     setIsSaving(true);
     try {
       await updateData(formData);
-      toast.success("Dados salvos com sucesso!");
+      toast.success("Base Dashboard salvo com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar dados do dashboard", error);
       const message =
@@ -304,7 +304,7 @@ export default function DataPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
             <Database className="h-7 w-7 text-primary" />
-            Dados
+            Base Dashboard
           </h1>
           <p className="text-muted-foreground">
             Preencha manualmente os valores que serão exibidos no dashboard.

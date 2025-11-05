@@ -19,19 +19,16 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data: row, error } = await supabase
-        .from("dashboard_data")
-        .select("data")
-        .eq("id", "dashboard-config")
-        .maybeSingle<{ data: DashboardData }>();
+      const { data: payload, error } = await supabase.rpc("get_dashboard_data");
 
       if (error) {
         console.error("Erro ao buscar dados do dashboard", error);
+        setData(defaultDashboardData);
         return;
       }
 
-      if (row?.data) {
-        setData(row.data);
+      if (payload && typeof payload === "object") {
+        setData(payload as DashboardData);
       } else {
         setData(defaultDashboardData);
       }
@@ -45,16 +42,19 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   }, [fetchData]);
 
   const persistData = useCallback(async (updatedData: DashboardData) => {
-    const { error } = await supabase.from("dashboard_data").upsert(
-      { id: "dashboard-config", data: updatedData },
-      { onConflict: "id" },
-    );
+    const { data: savedData, error } = await supabase.rpc("upsert_dashboard_data", {
+      p_data: updatedData,
+    });
 
     if (error) {
       throw new Error(error.message);
     }
 
-    setData(updatedData);
+    if (savedData && typeof savedData === "object") {
+      setData(savedData as DashboardData);
+    } else {
+      setData(updatedData);
+    }
   }, []);
 
   const value = useMemo(

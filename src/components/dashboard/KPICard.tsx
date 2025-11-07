@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 interface KPICardProps {
   title: ReactNode;
   value: string | number;
@@ -27,30 +26,28 @@ interface KPICardProps {
   titleAdornment?: ReactNode;
   children?: ReactNode;
 }
-
 const statusConfig = {
   critical: {
     icon: AlertTriangle,
     className: "border-destructive/50 bg-destructive/5",
-    iconClassName: "text-destructive",
+    iconClassName: "text-destructive"
   },
   warning: {
     icon: AlertTriangle,
     className: "border-warning/50 bg-warning/5",
-    iconClassName: "text-warning",
+    iconClassName: "text-warning"
   },
   success: {
     icon: CheckCircle2,
     className: "border-success/50 bg-success/5",
-    iconClassName: "text-success",
+    iconClassName: "text-success"
   },
   info: {
     icon: Info,
     className: "border-info/50 bg-info/5",
-    iconClassName: "text-info",
-  },
+    iconClassName: "text-info"
+  }
 };
-
 export function KPICard({
   title,
   value,
@@ -64,18 +61,10 @@ export function KPICard({
   className,
   titleClassName,
   titleAdornment,
-  children,
+  children
 }: KPICardProps) {
   const StatusIcon = status ? statusConfig[status].icon : null;
-
-  return (
-    <Card
-      className={cn(
-        "p-6 bg-card hover:bg-card-dashboard-hover transition-all duration-200 border-border/50",
-        status && statusConfig[status].className,
-        className
-      )}
-    >
+  return <Card className={cn("p-6 bg-card hover:bg-card-dashboard-hover transition-all duration-200 border-border/50", status && statusConfig[status].className, className)}>
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -87,86 +76,39 @@ export function KPICard({
               {titleAdornment && <div className="flex items-center gap-2">{titleAdornment}</div>}
             </div>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-foreground">{value}</p>
-              {badge && (
-                <Badge
-                  variant={badge.variant}
-                  className={cn(
-                    "text-xs",
-                    badge.color === "success" && "bg-success text-success-foreground",
-                    badge.color === "warning" && "bg-warning text-warning-foreground"
-                  )}
-                >
+              
+              {badge && <Badge variant={badge.variant} className={cn("text-xs", badge.color === "success" && "bg-success text-success-foreground", badge.color === "warning" && "bg-warning text-warning-foreground")}>
                   {badge.label}
-                </Badge>
-              )}
+                </Badge>}
             </div>
-            {subtitle && (
-              <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
           </div>
 
-          {StatusIcon && (
-            <StatusIcon className={cn("h-5 w-5", status && statusConfig[status].iconClassName)} />
-          )}
+          {StatusIcon && <StatusIcon className={cn("h-5 w-5", status && statusConfig[status].iconClassName)} />}
         </div>
 
-        {trend && (
-          <div className="flex items-center gap-1.5">
-            {trend.direction === "up" && (
-              <TrendingUp
-                className={cn(
-                  "h-4 w-4",
-                  trend.isPositive ? "text-success" : "text-destructive"
-                )}
-              />
-            )}
-            {trend.direction === "down" && (
-              <TrendingDown
-                className={cn(
-                  "h-4 w-4",
-                  trend.isPositive ? "text-success" : "text-destructive"
-                )}
-              />
-            )}
-            {trend.direction === "neutral" && (
-              <Minus className="h-4 w-4 text-muted-foreground" />
-            )}
-            <span
-              className={cn(
-                "text-sm font-medium",
-                trend.direction === "up" && (trend.isPositive ? "text-success" : "text-destructive"),
-                trend.direction === "down" && (trend.isPositive ? "text-success" : "text-destructive"),
-                trend.direction === "neutral" && "text-muted-foreground"
-              )}
-            >
+        {trend && <div className="flex items-center gap-1.5">
+            {trend.direction === "up" && <TrendingUp className={cn("h-4 w-4", trend.isPositive ? "text-success" : "text-destructive")} />}
+            {trend.direction === "down" && <TrendingDown className={cn("h-4 w-4", trend.isPositive ? "text-success" : "text-destructive")} />}
+            {trend.direction === "neutral" && <Minus className="h-4 w-4 text-muted-foreground" />}
+            <span className={cn("text-sm font-medium", trend.direction === "up" && (trend.isPositive ? "text-success" : "text-destructive"), trend.direction === "down" && (trend.isPositive ? "text-success" : "text-destructive"), trend.direction === "neutral" && "text-muted-foreground")}>
               {trend.value}
             </span>
-          </div>
-        )}
+          </div>}
 
-        {goal && (
-          <div className="text-sm text-muted-foreground">
+        {goal && <div className="text-sm text-muted-foreground">
             Meta: <span className="font-medium text-foreground">{goal}</span>
-          </div>
-        )}
+          </div>}
 
-        {progress !== undefined && (
-          <div className="space-y-1.5">
+        {progress !== undefined && <div className="space-y-1.5">
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  progress >= 100 ? "bg-success" : progress >= 85 ? "bg-secondary" : "bg-warning"
-                )}
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
+              <div className={cn("h-full rounded-full transition-all", progress >= 100 ? "bg-success" : progress >= 85 ? "bg-secondary" : "bg-warning")} style={{
+            width: `${Math.min(progress, 100)}%`
+          }} />
             </div>
-          </div>
-        )}
+          </div>}
 
         {children}
       </div>
-    </Card>
-  );
+    </Card>;
 }

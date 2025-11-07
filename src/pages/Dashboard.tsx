@@ -342,6 +342,7 @@ export default function Dashboard() {
                     }}
                   />
                   <Legend />
+                  <Bar dataKey="score0" stackId="a" fill="hsl(var(--chart-5))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
                   <Bar dataKey="score1" stackId="a" fill="hsl(var(--chart-1))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
                   <Bar dataKey="score2" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
                   <Bar dataKey="score3" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} isAnimationActive={false} />

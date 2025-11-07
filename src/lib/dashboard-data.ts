@@ -29,6 +29,17 @@ export type DashboardCardData = {
   goal?: string;
   trend?: string;
   progress?: number;
+  monthComparison?: string; // % comparado com mês anterior
+  status?: "critical" | "warning" | "success"; // Crítico, Atenção, Excelente
+  isKR?: boolean; // Se faz parte de um KR
+};
+
+export type SquadBugEntry = {
+  squad: string;
+  currentMonth: number;
+  previousMonth: number;
+  status: "critical" | "warning" | "success";
+  trend: string;
 };
 
 export type DashboardData = {
@@ -52,6 +63,7 @@ export type DashboardData = {
     monthlyTracking: MonthlyTrackingEntry[];
     supportBugs: SupportBugEntry[];
   };
+  squadBugs: SquadBugEntry[];
 };
 
 export const defaultDashboardData: DashboardData = {
@@ -59,16 +71,25 @@ export const defaultDashboardData: DashboardData = {
     criticalBugs: {
       value: "27",
       subtitle: "26% do total em setembro",
+      monthComparison: "+5%",
+      status: "warning",
+      isKR: false,
     },
     bugRetention: {
       value: "42%",
       subtitle: "Agosto: 32%",
+      monthComparison: "+10%",
+      status: "warning",
+      isKR: false,
     },
     bugsPerUser: {
       value: "0,28",
       subtitle: "2024: 0,31",
       goal: "0,26",
       trend: "-9% YoY",
+      monthComparison: "-3%",
+      status: "success",
+      isKR: true,
     },
     efficiency: {
       value: "86%",
@@ -187,4 +208,10 @@ export const defaultDashboardData: DashboardData = {
       { month: "Set", score0: 0, score1: 24, score2: 40, score3: 34, score4: 22 },
     ],
   },
+  squadBugs: [
+    { squad: "Controladoria", currentMonth: 15, previousMonth: 18, status: "success", trend: "-16.7%" },
+    { squad: "RH", currentMonth: 22, previousMonth: 20, status: "warning", trend: "+10%" },
+    { squad: "Empresarial", currentMonth: 8, previousMonth: 12, status: "success", trend: "-33.3%" },
+    { squad: "Fiscal", currentMonth: 25, previousMonth: 22, status: "warning", trend: "+13.6%" },
+  ],
 };

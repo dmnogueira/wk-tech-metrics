@@ -26,6 +26,8 @@ interface KPICardProps {
   titleClassName?: string;
   titleAdornment?: ReactNode;
   children?: ReactNode;
+  monthComparison?: string;
+  isKR?: boolean;
 }
 
 const statusConfig = {
@@ -65,6 +67,8 @@ export function KPICard({
   titleClassName,
   titleAdornment,
   children,
+  monthComparison,
+  isKR,
 }: KPICardProps) {
   const StatusIcon = status ? statusConfig[status].icon : null;
 
@@ -83,6 +87,11 @@ export function KPICard({
               <div className="flex items-center gap-2">
                 {icon && <div className="text-muted-foreground">{icon}</div>}
                 <h3 className={cn("text-sm font-medium text-muted-foreground", titleClassName)}>{title}</h3>
+                {isKR && (
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                    KR
+                  </Badge>
+                )}
               </div>
               {titleAdornment && <div className="flex items-center gap-2">{titleAdornment}</div>}
             </div>
@@ -103,6 +112,14 @@ export function KPICard({
             </div>
             {subtitle && (
               <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+            )}
+            {monthComparison && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Vs mês anterior: <span className={cn(
+                  "font-semibold",
+                  monthComparison.startsWith("+") ? "text-destructive" : "text-success"
+                )}>{monthComparison}</span>
+              </p>
             )}
           </div>
 

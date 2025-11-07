@@ -35,7 +35,7 @@ export default function Dashboard() {
     return () => window.cancelAnimationFrame(id);
   }, []);
 
-  const { cards, charts } = dashboardData;
+  const { cards, charts, squadBugs } = dashboardData;
 
   const { squads, data: irEntries } = charts.irProjects;
 
@@ -88,9 +88,9 @@ export default function Dashboard() {
               title="Bugs Críticos"
               value={cards.criticalBugs.value}
               subtitle={cards.criticalBugs.subtitle}
-              badge={{ label: "Crítico", variant: "destructive" }}
-              trend={{ value: "Sem alteração", direction: "neutral" }}
-              status="critical"
+              status={cards.criticalBugs.status}
+              monthComparison={cards.criticalBugs.monthComparison}
+              isKR={cards.criticalBugs.isKR}
               icon={<AlertTriangle className="h-5 w-5" />}
             />
 
@@ -98,23 +98,24 @@ export default function Dashboard() {
               title="Retenção de Bugs"
               value={cards.bugRetention.value}
               subtitle={cards.bugRetention.subtitle}
-              badge={{ label: "Crítico", variant: "destructive" }}
-              trend={{ value: "+10pp", direction: "up", isPositive: false }}
-              status="critical"
+              status={cards.bugRetention.status}
+              monthComparison={cards.bugRetention.monthComparison}
+              isKR={cards.bugRetention.isKR}
             />
 
             <KPICard
               title="Bugs por Usuário"
               value={cards.bugsPerUser.value}
               subtitle={cards.bugsPerUser.subtitle}
-              badge={{ label: "KR", variant: "secondary" }}
               trend={
                 cards.bugsPerUser.trend
                   ? { value: cards.bugsPerUser.trend, direction: "down", isPositive: true }
                   : undefined
               }
               goal={cards.bugsPerUser.goal}
-              status="warning"
+              status={cards.bugsPerUser.status}
+              monthComparison={cards.bugsPerUser.monthComparison}
+              isKR={cards.bugsPerUser.isKR}
               icon={<Users className="h-5 w-5" />}
             />
           </div>
@@ -161,7 +162,7 @@ export default function Dashboard() {
                         }
                       />
                     ))}
-                    <LabelList dataKey="count" position="top" fill="hsl(var(--foreground))" />
+                    <LabelList dataKey="count" position="top" fill="hsl(var(--foreground))" fontSize={12} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -234,8 +235,12 @@ export default function Dashboard() {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="bugs" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                  <Bar dataKey="issues" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="bugs" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                    <LabelList dataKey="bugs" position="top" fill="hsl(var(--foreground))" fontSize={12} />
+                  </Bar>
+                  <Bar dataKey="issues" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                    <LabelList dataKey="issues" position="top" fill="hsl(var(--foreground))" fontSize={12} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -296,10 +301,28 @@ export default function Dashboard() {
         </section>
 
 
-        {/* Cards de Bug em Sustentação */}
+        {/* Bugs em Sustentação por Squad */}
+        <section>
+          <SectionHeader title="Bugs em Sustentação por Squad" icon={<Bug className="h-6 w-6" />} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {squadBugs.map((squad) => (
+              <KPICard
+                key={squad.squad}
+                title={squad.squad}
+                value={squad.currentMonth}
+                subtitle={`Mês anterior: ${squad.previousMonth}`}
+                status={squad.status}
+                monthComparison={squad.trend}
+                icon={<Bug className="h-5 w-5" />}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Score de Bugs em Suporte */}
         <section>
           <KPICard
-            title="Cards de Bug em Sustentação"
+            title="Score de Bugs em Suporte"
             value=""
             subtitle="Distribuição por score de severidade"
             badge={{ label: "Melhoria", variant: "secondary", color: "warning" }}

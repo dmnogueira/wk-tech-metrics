@@ -29,7 +29,7 @@ export default function DataPage() {
   const handleCardChange = (
     card: keyof DashboardData["cards"],
     field: keyof DashboardData["cards"][typeof card],
-    value: string | number,
+    value: string | number | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -282,6 +282,43 @@ export default function DataPage() {
     }));
   };
 
+  const handleSquadBugChange = (
+    index: number,
+    field: keyof DashboardData["squadBugs"][number],
+    value: string,
+  ) => {
+    setFormData((prev) => {
+      const squadBugs = [...prev.squadBugs];
+      squadBugs[index] = {
+        ...squadBugs[index],
+        [field]: field === "squad" || field === "status" || field === "trend" 
+          ? value 
+          : ensureNumber(value),
+      } as DashboardData["squadBugs"][number];
+      return {
+        ...prev,
+        squadBugs,
+      };
+    });
+  };
+
+  const addSquadBugRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      squadBugs: [
+        ...prev.squadBugs,
+        { squad: "", currentMonth: 0, previousMonth: 0, status: "warning" as const, trend: "+0%" },
+      ],
+    }));
+  };
+
+  const removeSquadBugRow = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      squadBugs: prev.squadBugs.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSaving(true);
@@ -333,6 +370,7 @@ export default function DataPage() {
                   onChange={(event) =>
                     handleCardChange("criticalBugs", "value", event.target.value)
                   }
+                  placeholder="Valor"
                 />
                 <Input
                   value={formData.cards.criticalBugs.subtitle}
@@ -341,6 +379,35 @@ export default function DataPage() {
                   }
                   placeholder="Subtítulo"
                 />
+                <Input
+                  value={formData.cards.criticalBugs.monthComparison ?? ""}
+                  onChange={(event) =>
+                    handleCardChange("criticalBugs", "monthComparison", event.target.value)
+                  }
+                  placeholder="Comparação vs mês anterior (ex: +5%)"
+                />
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.cards.criticalBugs.status ?? "warning"}
+                  onChange={(event) =>
+                    handleCardChange("criticalBugs", "status", event.target.value)
+                  }
+                >
+                  <option value="critical">Crítico</option>
+                  <option value="warning">Atenção</option>
+                  <option value="success">Excelente</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.cards.criticalBugs.isKR ?? false}
+                    onChange={(event) =>
+                      handleCardChange("criticalBugs", "isKR", event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  É Key Result (KR)
+                </label>
               </div>
 
               <div className="space-y-2">
@@ -350,6 +417,7 @@ export default function DataPage() {
                   onChange={(event) =>
                     handleCardChange("bugRetention", "value", event.target.value)
                   }
+                  placeholder="Valor"
                 />
                 <Input
                   value={formData.cards.bugRetention.subtitle}
@@ -358,6 +426,35 @@ export default function DataPage() {
                   }
                   placeholder="Subtítulo"
                 />
+                <Input
+                  value={formData.cards.bugRetention.monthComparison ?? ""}
+                  onChange={(event) =>
+                    handleCardChange("bugRetention", "monthComparison", event.target.value)
+                  }
+                  placeholder="Comparação vs mês anterior (ex: +10%)"
+                />
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.cards.bugRetention.status ?? "warning"}
+                  onChange={(event) =>
+                    handleCardChange("bugRetention", "status", event.target.value)
+                  }
+                >
+                  <option value="critical">Crítico</option>
+                  <option value="warning">Atenção</option>
+                  <option value="success">Excelente</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.cards.bugRetention.isKR ?? false}
+                    onChange={(event) =>
+                      handleCardChange("bugRetention", "isKR", event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  É Key Result (KR)
+                </label>
               </div>
 
               <div className="space-y-2">
@@ -367,6 +464,7 @@ export default function DataPage() {
                   onChange={(event) =>
                     handleCardChange("bugsPerUser", "value", event.target.value)
                   }
+                  placeholder="Valor"
                 />
                 <Input
                   value={formData.cards.bugsPerUser.subtitle}
@@ -389,6 +487,35 @@ export default function DataPage() {
                   }
                   placeholder="Tendência"
                 />
+                <Input
+                  value={formData.cards.bugsPerUser.monthComparison ?? ""}
+                  onChange={(event) =>
+                    handleCardChange("bugsPerUser", "monthComparison", event.target.value)
+                  }
+                  placeholder="Comparação vs mês anterior (ex: -3%)"
+                />
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.cards.bugsPerUser.status ?? "warning"}
+                  onChange={(event) =>
+                    handleCardChange("bugsPerUser", "status", event.target.value)
+                  }
+                >
+                  <option value="critical">Crítico</option>
+                  <option value="warning">Atenção</option>
+                  <option value="success">Excelente</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.cards.bugsPerUser.isKR ?? false}
+                    onChange={(event) =>
+                      handleCardChange("bugsPerUser", "isKR", event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  É Key Result (KR)
+                </label>
               </div>
 
               <div className="space-y-2">
@@ -771,6 +898,93 @@ export default function DataPage() {
                       variant="ghost"
                       onClick={() => removeMonthlyTrackingRow(index)}
                       disabled={formData.charts.monthlyTracking.length === 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </Card>
+
+            <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Bugs em Sustentação por Squad</h2>
+                <p className="text-muted-foreground text-sm">
+                  Informe a quantidade de bugs em sustentação por squad, comparando mês atual vs anterior.
+                </p>
+              </div>
+              <Button type="button" variant="outline" onClick={addSquadBugRow}>
+                <Plus className="h-4 w-4 mr-2" /> Adicionar squad
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {formData.squadBugs.map((entry, index) => (
+                <div key={`squad-bug-${index}`} className="border rounded-lg p-4 space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div className="space-y-2">
+                      <Label>Squad</Label>
+                      <Input
+                        value={entry.squad}
+                        onChange={(event) =>
+                          handleSquadBugChange(index, "squad", event.target.value)
+                        }
+                        placeholder="Nome do Squad"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mês Atual</Label>
+                      <Input
+                        type="number"
+                        value={entry.currentMonth}
+                        onChange={(event) =>
+                          handleSquadBugChange(index, "currentMonth", event.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mês Anterior</Label>
+                      <Input
+                        type="number"
+                        value={entry.previousMonth}
+                        onChange={(event) =>
+                          handleSquadBugChange(index, "previousMonth", event.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={entry.status}
+                        onChange={(event) =>
+                          handleSquadBugChange(index, "status", event.target.value)
+                        }
+                      >
+                        <option value="critical">Crítico</option>
+                        <option value="warning">Atenção</option>
+                        <option value="success">Excelente</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Tendência</Label>
+                      <Input
+                        value={entry.trend}
+                        onChange={(event) =>
+                          handleSquadBugChange(index, "trend", event.target.value)
+                        }
+                        placeholder="Ex: +10% ou -5%"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => removeSquadBugRow(index)}
+                      disabled={formData.squadBugs.length === 1}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

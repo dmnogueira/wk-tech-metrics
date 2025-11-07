@@ -35,7 +35,7 @@ export default function Dashboard() {
     return () => window.cancelAnimationFrame(id);
   }, []);
 
-  const { cards, charts, squadBugs } = dashboardData;
+  const { cards, charts, squadBugs = [] } = dashboardData;
 
   const { squads, data: irEntries } = charts.irProjects;
 

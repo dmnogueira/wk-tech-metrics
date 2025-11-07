@@ -77,9 +77,7 @@ export function KPICard({
             </div>
             <div className="flex items-baseline gap-2">
               
-              {badge && <Badge variant={badge.variant} className={cn("text-xs", badge.color === "success" && "bg-success text-success-foreground", badge.color === "warning" && "bg-warning text-warning-foreground")}>
-                  {badge.label}
-                </Badge>}
+              {badge}
             </div>
             {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
           </div>

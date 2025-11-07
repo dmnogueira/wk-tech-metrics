@@ -288,16 +288,17 @@ export default function DataPage() {
     value: string,
   ) => {
     setFormData((prev) => {
-      const squadBugs = [...prev.squadBugs];
-      squadBugs[index] = {
-        ...squadBugs[index],
+      const squadBugs = prev.squadBugs || [];
+      const updatedSquadBugs = [...squadBugs];
+      updatedSquadBugs[index] = {
+        ...updatedSquadBugs[index],
         [field]: field === "squad" || field === "status" || field === "trend" 
           ? value 
           : ensureNumber(value),
       } as DashboardData["squadBugs"][number];
       return {
         ...prev,
-        squadBugs,
+        squadBugs: updatedSquadBugs,
       };
     });
   };
@@ -306,7 +307,7 @@ export default function DataPage() {
     setFormData((prev) => ({
       ...prev,
       squadBugs: [
-        ...prev.squadBugs,
+        ...(prev.squadBugs || []),
         { squad: "", currentMonth: 0, previousMonth: 0, status: "warning" as const, trend: "+0%" },
       ],
     }));
@@ -315,7 +316,7 @@ export default function DataPage() {
   const removeSquadBugRow = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      squadBugs: prev.squadBugs.filter((_, i) => i !== index),
+      squadBugs: (prev.squadBugs || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -921,7 +922,7 @@ export default function DataPage() {
             </div>
 
             <div className="space-y-4">
-              {formData.squadBugs.map((entry, index) => (
+              {(formData.squadBugs || []).map((entry, index) => (
                 <div key={`squad-bug-${index}`} className="border rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                     <div className="space-y-2">
@@ -984,7 +985,7 @@ export default function DataPage() {
                       type="button"
                       variant="ghost"
                       onClick={() => removeSquadBugRow(index)}
-                      disabled={formData.squadBugs.length === 1}
+                      disabled={(formData.squadBugs || []).length === 1}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

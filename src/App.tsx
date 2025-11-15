@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Dashboard from "./pages/Dashboard";
+import DashboardNew from "./pages/DashboardNew";
 import Login from "./pages/Login";
 import Import from "./pages/Import";
 import Squads from "./pages/Squads";
@@ -69,6 +70,14 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route
                 path="/"
+                element={
+                  <RequireAuth>
+                    <DashboardNew />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/dashboard-legacy"
                 element={
                   <RequireAuth>
                     <Dashboard />

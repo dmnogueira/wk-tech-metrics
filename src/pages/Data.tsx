@@ -366,38 +366,54 @@ export default function DataPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Bugs Críticos</Label>
-                <Input
-                  value={formData.cards.criticalBugs.value}
-                  onChange={(event) =>
-                    handleCardChange("criticalBugs", "value", event.target.value)
-                  }
-                  placeholder="Valor"
-                />
-                <Input
-                  value={formData.cards.criticalBugs.subtitle}
-                  onChange={(event) =>
-                    handleCardChange("criticalBugs", "subtitle", event.target.value)
-                  }
-                  placeholder="Subtítulo"
-                />
-                <Input
-                  value={formData.cards.criticalBugs.monthComparison ?? ""}
-                  onChange={(event) =>
-                    handleCardChange("criticalBugs", "monthComparison", event.target.value)
-                  }
-                  placeholder="Comparação vs mês anterior (ex: +5%)"
-                />
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={formData.cards.criticalBugs.status ?? "warning"}
-                  onChange={(event) =>
-                    handleCardChange("criticalBugs", "status", event.target.value)
-                  }
-                >
-                  <option value="critical">Crítico</option>
-                  <option value="warning">Atenção</option>
-                  <option value="success">Excelente</option>
-                </select>
+                <div className="space-y-2">
+                  <Label htmlFor="criticalBugs-value">Valor</Label>
+                  <Input
+                    id="criticalBugs-value"
+                    value={formData.cards.criticalBugs.value}
+                    onChange={(event) =>
+                      handleCardChange("criticalBugs", "value", event.target.value)
+                    }
+                    placeholder="Valor"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="criticalBugs-subtitle">Subtítulo</Label>
+                  <Input
+                    id="criticalBugs-subtitle"
+                    value={formData.cards.criticalBugs.subtitle}
+                    onChange={(event) =>
+                      handleCardChange("criticalBugs", "subtitle", event.target.value)
+                    }
+                    placeholder="Subtítulo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="criticalBugs-comparison">Comparação vs mês anterior</Label>
+                  <Input
+                    id="criticalBugs-comparison"
+                    value={formData.cards.criticalBugs.monthComparison ?? ""}
+                    onChange={(event) =>
+                      handleCardChange("criticalBugs", "monthComparison", event.target.value)
+                    }
+                    placeholder="Ex: +5%"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="criticalBugs-status">Status</Label>
+                  <select
+                    id="criticalBugs-status"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.cards.criticalBugs.status ?? "warning"}
+                    onChange={(event) =>
+                      handleCardChange("criticalBugs", "status", event.target.value)
+                    }
+                  >
+                    <option value="critical">Crítico</option>
+                    <option value="warning">Atenção</option>
+                    <option value="success">Excelente</option>
+                  </select>
+                </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -413,38 +429,54 @@ export default function DataPage() {
 
               <div className="space-y-2">
                 <Label>Retenção de Bugs</Label>
-                <Input
-                  value={formData.cards.bugRetention.value}
-                  onChange={(event) =>
-                    handleCardChange("bugRetention", "value", event.target.value)
-                  }
-                  placeholder="Valor"
-                />
-                <Input
-                  value={formData.cards.bugRetention.subtitle}
-                  onChange={(event) =>
-                    handleCardChange("bugRetention", "subtitle", event.target.value)
-                  }
-                  placeholder="Subtítulo"
-                />
-                <Input
-                  value={formData.cards.bugRetention.monthComparison ?? ""}
-                  onChange={(event) =>
-                    handleCardChange("bugRetention", "monthComparison", event.target.value)
-                  }
-                  placeholder="Comparação vs mês anterior (ex: +10%)"
-                />
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={formData.cards.bugRetention.status ?? "warning"}
-                  onChange={(event) =>
-                    handleCardChange("bugRetention", "status", event.target.value)
-                  }
-                >
-                  <option value="critical">Crítico</option>
-                  <option value="warning">Atenção</option>
-                  <option value="success">Excelente</option>
-                </select>
+                <div className="space-y-2">
+                  <Label htmlFor="bugRetention-value">Valor</Label>
+                  <Input
+                    id="bugRetention-value"
+                    value={formData.cards.bugRetention.value}
+                    onChange={(event) =>
+                      handleCardChange("bugRetention", "value", event.target.value)
+                    }
+                    placeholder="Valor"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bugRetention-subtitle">Subtítulo</Label>
+                  <Input
+                    id="bugRetention-subtitle"
+                    value={formData.cards.bugRetention.subtitle}
+                    onChange={(event) =>
+                      handleCardChange("bugRetention", "subtitle", event.target.value)
+                    }
+                    placeholder="Subtítulo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bugRetention-comparison">Comparação vs mês anterior</Label>
+                  <Input
+                    id="bugRetention-comparison"
+                    value={formData.cards.bugRetention.monthComparison ?? ""}
+                    onChange={(event) =>
+                      handleCardChange("bugRetention", "monthComparison", event.target.value)
+                    }
+                    placeholder="Ex: +10%"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bugRetention-status">Status</Label>
+                  <select
+                    id="bugRetention-status"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.cards.bugRetention.status ?? "warning"}
+                    onChange={(event) =>
+                      handleCardChange("bugRetention", "status", event.target.value)
+                    }
+                  >
+                    <option value="critical">Crítico</option>
+                    <option value="warning">Atenção</option>
+                    <option value="success">Excelente</option>
+                  </select>
+                </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -496,16 +528,17 @@ export default function DataPage() {
                   placeholder="Comparação vs mês anterior (ex: -3%)"
                 />
                 <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={formData.cards.bugsPerUser.status ?? "warning"}
-                  onChange={(event) =>
-                    handleCardChange("bugsPerUser", "status", event.target.value)
-                  }
-                >
-                  <option value="critical">Crítico</option>
-                  <option value="warning">Atenção</option>
-                  <option value="success">Excelente</option>
-                </select>
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.cards.bugsPerUser.status ?? "warning"}
+                    onChange={(event) =>
+                      handleCardChange("bugsPerUser", "status", event.target.value)
+                    }
+                  >
+                    <option value="critical">Crítico</option>
+                    <option value="warning">Atenção</option>
+                    <option value="success">Excelente</option>
+                  </select>
+                </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -521,7 +554,10 @@ export default function DataPage() {
 
               <div className="space-y-2">
                 <Label>Eficiência</Label>
-                <Input
+                <div className="space-y-2">
+                  <Label htmlFor="efficiency-value">Valor</Label>
+                  <Input
+                    id="efficiency-value"
                   value={formData.cards.efficiency.value}
                   onChange={(event) =>
                     handleCardChange("efficiency", "value", event.target.value)

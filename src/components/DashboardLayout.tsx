@@ -67,22 +67,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   Dashboard
                 </Button>
               </Link>
-              <Link to="/indicadores">
-                <Button
-                  variant={location.pathname === "/indicadores" ? "secondary" : "ghost"}
-                  size="sm"
-                >
-                  Indicadores
-                </Button>
-              </Link>
-              <Link to="/import">
-                <Button
-                  variant={location.pathname === "/import" ? "secondary" : "ghost"}
-                  size="sm"
-                >
-                  Importação
-                </Button>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    Admin <Menu className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-popover border-border">
+                  <DropdownMenuItem asChild>
+                    <Link to="/indicadores" className="cursor-pointer">Gestão de Indicadores</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/importacao" className="cursor-pointer">Gestão de Dados</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/import" className="cursor-pointer">Importar Métricas (Legacy)</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link to="/organogram">
                 <Button
                   variant={location.pathname === "/organogram" ? "secondary" : "ghost"}

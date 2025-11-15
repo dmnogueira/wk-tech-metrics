@@ -15,6 +15,7 @@ import Organogram from "./pages/Organogram";
 import Users from "./pages/Users";
 import DataPage from "./pages/Data";
 import Indicators from "./pages/Indicators";
+import DataImport from "./pages/DataImport";
 import NotFound from "./pages/NotFound";
 import { DashboardDataProvider } from "./contexts/dashboard-data-context";
 
@@ -135,6 +136,14 @@ const App = () => (
                 element={
                   <RequireAuth>
                     <Indicators />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/importacao"
+                element={
+                  <RequireAuth>
+                    <DataImport />
                   </RequireAuth>
                 }
               />

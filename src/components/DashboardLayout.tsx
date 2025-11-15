@@ -67,12 +67,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   Dashboard
                 </Button>
               </Link>
+              <Link to="/indicadores">
+                <Button
+                  variant={location.pathname === "/indicadores" ? "secondary" : "ghost"}
+                  size="sm"
+                >
+                  Indicadores
+                </Button>
+              </Link>
               <Link to="/import">
                 <Button
                   variant={location.pathname === "/import" ? "secondary" : "ghost"}
                   size="sm"
                 >
-                  Importar Métricas
+                  Importação
                 </Button>
               </Link>
               <Link to="/organogram">

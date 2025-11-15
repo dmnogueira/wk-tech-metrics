@@ -14,6 +14,7 @@ import JobRolesPage from "./pages/JobRoles";
 import Organogram from "./pages/Organogram";
 import Users from "./pages/Users";
 import DataPage from "./pages/Data";
+import Indicators from "./pages/Indicators";
 import NotFound from "./pages/NotFound";
 import { DashboardDataProvider } from "./contexts/dashboard-data-context";
 
@@ -126,6 +127,14 @@ const App = () => (
                 element={
                   <RequireAuth>
                     <DataPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/indicadores"
+                element={
+                  <RequireAuth>
+                    <Indicators />
                   </RequireAuth>
                 }
               />

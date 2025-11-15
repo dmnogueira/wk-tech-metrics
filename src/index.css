@@ -8,132 +8,139 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* WK Tech Metrics Design System */
+    /* WK.metrics Design System - Seguindo PRD v2.0 */
+    /* Fundo principal: Branco ou Cinza Claro */
     --background: 0 0% 100%;
-    --foreground: 208 82% 22%;
+    --foreground: 264 30% 25%; /* Roxo WK mais escuro para texto */
 
     --card: 0 0% 100%;
-    --card-foreground: 208 82% 22%;
+    --card-foreground: 264 30% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 208 82% 22%;
+    --popover-foreground: 264 30% 25%;
 
-    /* Primary: Deep Navy Blue */
-    --primary: 208 82% 22%;
+    /* Cor Primária: Roxo WK #3c2d55 (Links, botões primários, headers) */
+    --primary: 264 30% 25%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Emerald Green */
-    --secondary: 166 100% 33%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Accent: WK Red */
-    --accent: 0 100% 60%;
+    /* Cor de Destaque: Laranja WK #e6503c (CTAs de alto impacto) */
+    --accent: 6 78% 57%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Cores Secundárias para gráficos e elementos */
+    /* Azul #3c7dc8 */
+    --secondary: 211 60% 51%;
+    --secondary-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --muted: 0 0% 84%; /* Cinza Claro #d7d7d7 */
+    --muted-foreground: 264 15% 45%;
+
+    /* Crítico: Laranja WK #e6503c */
+    --destructive: 6 78% 57%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success state */
-    --success: 142 76% 36%;
+    /* Excelente/OK: Azul WK #3c7dc8 */
+    --success: 211 60% 51%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning state */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    /* Atenção: Amarelo WK #f5c85a */
+    --warning: 42 89% 65%;
+    --warning-foreground: 264 30% 25%;
 
-    /* Info state */
-    --info: 199 89% 48%;
+    /* Info: Azul WK */
+    --info: 211 60% 51%;
     --info-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 208 82% 22%;
+    --border: 0 0% 84%;
+    --input: 0 0% 84%;
+    --ring: 264 30% 25%;
 
     --radius: 0.5rem;
 
     /* Dashboard specific */
-    --dashboard-bg: 208 82% 12%;
-    --card-dashboard: 208 70% 18%;
-    --card-dashboard-hover: 208 70% 22%;
+    --dashboard-bg: 0 0% 100%;
+    --card-dashboard: 0 0% 100%;
+    --card-dashboard-hover: 0 0% 97%;
     
-    /* Chart colors */
-    --chart-1: 0 100% 60%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 199 89% 48%;
-    --chart-4: 142 76% 36%;
-    --chart-5: 271 91% 65%;
+    /* Chart colors - Paleta Secundária WK */
+    --chart-1: 211 60% 51%; /* Azul #3c7dc8 */
+    --chart-2: 42 89% 65%; /* Amarelo #f5c85a */
+    --chart-3: 6 78% 57%; /* Laranja/Salmão #e6503c */
+    --chart-4: 240 48% 79%; /* Lavanda #b4b4e1 */
+    --chart-5: 11 100% 76%; /* Salmão claro #ffa587 */
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 208 82% 22%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 208 82% 22%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 264 30% 25%;
+    --sidebar-primary: 264 30% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 97%;
+    --sidebar-accent-foreground: 264 30% 25%;
+    --sidebar-border: 0 0% 84%;
+    --sidebar-ring: 264 30% 25%;
   }
 
   .dark {
-    --background: 208 82% 12%;
+    /* Modo escuro mantém a mesma paleta WK com ajustes de contraste */
+    --background: 264 30% 12%;
     --foreground: 0 0% 98%;
 
-    --card: 208 70% 18%;
+    --card: 264 25% 18%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 208 70% 18%;
+    --popover: 264 25% 18%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 208 82% 22%;
+    --primary: 264 30% 70%;
+    --primary-foreground: 264 30% 12%;
 
-    --secondary: 166 100% 33%;
-    --secondary-foreground: 0 0% 100%;
-
-    --accent: 0 100% 60%;
+    --accent: 6 78% 57%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 208 60% 25%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --secondary: 211 60% 51%;
+    --secondary-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --muted: 264 20% 25%;
+    --muted-foreground: 0 0% 75%;
+
+    --destructive: 6 78% 57%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 142 76% 36%;
+    --success: 211 60% 51%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 42 89% 65%;
+    --warning-foreground: 264 30% 12%;
 
-    --info: 199 89% 48%;
+    --info: 211 60% 51%;
     --info-foreground: 0 0% 100%;
 
-    --border: 208 60% 25%;
-    --input: 208 60% 25%;
-    --ring: 0 0% 83.1%;
+    --border: 264 20% 30%;
+    --input: 264 20% 30%;
+    --ring: 264 30% 70%;
 
-    --dashboard-bg: 208 82% 12%;
-    --card-dashboard: 208 70% 18%;
-    --card-dashboard-hover: 208 70% 22%;
+    --dashboard-bg: 264 30% 12%;
+    --card-dashboard: 264 25% 18%;
+    --card-dashboard-hover: 264 25% 22%;
 
-    --chart-1: 0 100% 60%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 199 89% 48%;
-    --chart-4: 142 76% 36%;
-    --chart-5: 271 91% 65%;
+    --chart-1: 211 60% 51%;
+    --chart-2: 42 89% 65%;
+    --chart-3: 6 78% 57%;
+    --chart-4: 240 48% 79%;
+    --chart-5: 11 100% 76%;
 
-    --sidebar-background: 208 82% 12%;
+    --sidebar-background: 264 30% 12%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 208 82% 22%;
-    --sidebar-accent: 208 60% 25%;
+    --sidebar-primary: 264 30% 70%;
+    --sidebar-primary-foreground: 264 30% 12%;
+    --sidebar-accent: 264 20% 25%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 208 60% 25%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 264 20% 30%;
+    --sidebar-ring: 264 30% 70%;
   }
 }
+
+/* Import Work Sans font from Google Fonts - WK Typography */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   * {
@@ -142,5 +149,24 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Work Sans', sans-serif;
+  }
+
+  /* Typography - Work Sans para títulos e corpo de texto */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  /* Logo usa Bree Thin (quando disponível) */
+  .logo-text {
+    font-family: 'Bree Serif', 'Work Sans', serif;
+    font-weight: 300;
+  }
+
+  /* Estética clean - sem sombras, gradientes ou relevos por padrão */
+  .wk-clean {
+    text-shadow: none;
+    box-shadow: none;
   }
 }

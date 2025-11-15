@@ -1,8 +1,12 @@
-# Welcome to your Lovable project
+# WK Tech Metrics
+
+Dashboard de métricas técnicas para acompanhamento de KPIs e performance de equipes.
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/94999def-572c-4ae7-8e36-e0a06ad8bd1b
+**Repository**: https://github.com/dmnogueira/wk-tech-metrics
+
+**Original Project URL**: https://lovable.dev/projects/94999def-572c-4ae7-8e36-e0a06ad8bd1b
 
 ## How can I edit this code?
 
@@ -24,10 +28,10 @@ Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/dmnogueira/wk-tech-metrics.git
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd wk-tech-metrics
 
 # Step 3: Install the necessary dependencies.
 npm i

@@ -81,6 +81,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        wk: {
+          purple: "#3c2d55",
+          orange: "#e6503c",
+          blue: "#3c7dc8",
+          lavender: "#b4b4e1",
+          yellow: "#f5c85a",
+          salmon: "#ffa587",
+          gray: "#d7d7d7",
+        },
+      },
+      fontFamily: {
+        sans: ["Work Sans", "sans-serif"],
+        bree: ["Bree Serif", "serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

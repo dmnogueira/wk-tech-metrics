@@ -1,8 +1,14 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "wk-tech-metrics",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Tech Metrics Dashboard - KPI tracking and team performance monitoring",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmnogueira/wk-tech-metrics.git"
+  },
+  "author": "dmnogueira",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

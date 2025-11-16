@@ -69,8 +69,8 @@ export default function DashboardNew() {
   const isLoading = loadingIndicators || loadingValues;
 
   // Determinar status geral do dashboard
-  const overallStatus = useMemo(() => {
-    if (!values || values.length === 0) return "neutral";
+  const overallStatus = useMemo((): "ok" | "attention" | "critical" => {
+    if (!values || values.length === 0) return "ok";
 
     const statusCounts = {
       critical: 0,
@@ -85,8 +85,7 @@ export default function DashboardNew() {
 
     if (statusCounts.critical > 0) return "critical";
     if (statusCounts.warning > 2) return "attention";
-    if (statusCounts.excellent > statusCounts.warning) return "success";
-    return "neutral";
+    return "ok"; // success or neutral -> ok
   }, [values]);
 
   if (isLoading) {

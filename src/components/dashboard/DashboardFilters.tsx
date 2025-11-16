@@ -44,7 +44,7 @@ export function DashboardFilters({
   onSquadChange,
   compareWithPrevious,
   onCompareToggle,
-  overallStatus,
+  overallStatus = "ok", // Default value
 }: DashboardFiltersProps) {
   const months = [
     { value: "2025-09", label: "Setembro 2025" },
@@ -59,6 +59,12 @@ export function DashboardFilters({
     { value: "rh", label: "RH" },
     { value: "empresarial", label: "Empresarial" },
   ];
+
+  // Ensure overallStatus is valid
+  const safeStatus = (overallStatus && statusConfig[overallStatus]) 
+    ? overallStatus 
+    : "ok";
+  const statusInfo = statusConfig[safeStatus];
 
   return (
     <div className="bg-card rounded-lg border border-border/50 p-4 mb-6">
@@ -109,8 +115,8 @@ export function DashboardFilters({
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Status Geral:</span>
-          <Badge className={statusConfig[overallStatus].className}>
-            {statusConfig[overallStatus].label}
+          <Badge className={statusInfo.className}>
+            {statusInfo.label}
           </Badge>
         </div>
       </div>

@@ -1931,19 +1931,19 @@ INSERT INTO public.indicators (
   false,
   0,
   'Adoção de IA',
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  'AI',
+  'Downstream',
+  'Inovação',
+  'Medir adoção de ferramentas de IA no desenvolvimento.',
+  'Aumentar produtividade através de ferramentas de IA.',
+  '% de desenvolvedores utilizando IA; % de código gerado/auxiliado por IA',
+  'Treinar equipe; disponibilizar ferramentas; criar guidelines; compartilhar casos de sucesso.',
+  'Alta adoção de IA; produtividade aumentada; qualidade mantida ou melhorada.',
+  '> 70% de adoção da equipe.',
+  'Mensal',
+  'Por Squad, Profissional',
+  'Pesquisa interna; métricas de ferramentas (Copilot, etc)',
+  'Survey + telemetria de ferramentas'
 );
 
 -- Total de indicadores inseridos: 51

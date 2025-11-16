@@ -92,10 +92,10 @@ export default function DashboardNew() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96 bg-background">
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">Carregando dashboard...</p>
+            <p className="text-foreground font-medium">Carregando dashboard...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -103,18 +103,27 @@ export default function DashboardNew() {
   }
 
   const categories = Object.keys(categorizedIndicators).sort();
+  const hasIndicators = indicators && indicators.length > 0;
+  const hasValues = values && values.length > 0;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 min-h-screen bg-background p-6">
         {/* Header */}
-        <div>
+        <div className="bg-card border rounded-lg p-6">
           <h1 className="text-3xl font-bold text-foreground mb-2 logo-text">
             WK.metrics
           </h1>
           <p className="text-muted-foreground">
             Sistema de Métricas Técnicas - {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
           </p>
+          
+          {/* Debug info */}
+          <div className="mt-4 text-sm text-muted-foreground space-y-1">
+            <p>✅ Indicadores cadastrados: {indicators?.length || 0}</p>
+            <p>📊 Valores no período: {values?.length || 0}</p>
+            <p>📂 Categorias: {categories.length}</p>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -128,16 +137,40 @@ export default function DashboardNew() {
           overallStatus={overallStatus}
         />
 
-        {/* Indicadores sem categoria ou sem valores */}
-        {categories.length === 0 && (
-          <div className="border-2 border-dashed rounded-lg p-12 text-center">
+        {/* Mensagem quando não há indicadores */}
+        {!hasIndicators && (
+          <div className="border-2 border-dashed rounded-lg p-12 text-center bg-card">
             <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <span className="text-2xl">📊</span>
             </div>
-            <h3 className="text-lg font-semibold mb-2">Nenhum indicador ativo</h3>
+            <h3 className="text-lg font-semibold mb-2 text-foreground">Nenhum indicador ativo</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Configure indicadores na área administrativa para começar a visualizar métricas
             </p>
+          </div>
+        )}
+
+        {/* Mensagem quando há indicadores mas sem valores */}
+        {hasIndicators && !hasValues && (
+          <div className="border-2 border-dashed rounded-lg p-12 text-center bg-card">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <span className="text-2xl">📈</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-foreground">
+              Dashboard Configurado com Sucesso! 🎉
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Você tem <strong className="text-foreground">{indicators?.length} indicadores</strong> cadastrados,
+              mas ainda não há dados históricos para exibir.
+            </p>
+            <div className="space-y-2 text-sm text-left max-w-md mx-auto bg-muted/50 p-4 rounded-lg">
+              <p className="font-medium text-foreground">📋 Próximos passos:</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Acesse <strong className="text-foreground">Indicadores Técnicos</strong> para ver os {indicators?.length} indicadores</li>
+                <li>Use <strong className="text-foreground">Importação de Dados</strong> para adicionar valores históricos</li>
+                <li>Configure conexões com Azure DevOps para automação</li>
+              </ul>
+            </div>
           </div>
         )}
 
@@ -165,18 +198,7 @@ export default function DashboardNew() {
           );
         })}
 
-        {/* Mensagem se não há dados para o período */}
-        {categories.length > 0 && values?.length === 0 && (
-          <div className="rounded-lg border border-dashed p-8 text-center bg-muted/20">
-            <p className="text-muted-foreground">
-              Não há dados registrados para o período selecionado.
-              <br />
-              <span className="text-sm">
-                Use a área de <strong>Gestão de Dados</strong> para importar valores.
-              </span>
-            </p>
-          </div>
-        )}
+
       </div>
     </DashboardLayout>
   );

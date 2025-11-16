@@ -146,6 +146,12 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   }, [fetchData]);
 
   const persistData = useCallback(async (updatedData: DashboardData) => {
+    // Desabilitado temporariamente - sistema novo não usa dashboard_data legado
+    console.log("persistData: Sistema novo não persiste dados legados");
+    setData(updatedData);
+    return;
+    
+    /* Código legado desabilitado
     const { data: savedData, error } = await supabase.rpc(
       "upsert_dashboard_data",
       {
@@ -179,7 +185,8 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     } else {
       setData(updatedData);
     }
-  }, [upsertViaEdgeFunction, upsertViaTable]);
+    */
+  }, []);
 
   const value = useMemo(
     () => ({

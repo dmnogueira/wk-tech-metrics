@@ -1,3 +1,6 @@
+/* Import Work Sans font from Google Fonts - WK Typography */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -138,9 +141,6 @@ All colors MUST be HSL.
     --sidebar-ring: 264 30% 70%;
   }
 }
-
-/* Import Work Sans font from Google Fonts - WK Typography */
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   * {

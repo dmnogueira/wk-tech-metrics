@@ -14,10 +14,13 @@ export default defineConfig(({ mode }) => ({
       "localhost",
       "127.0.0.1"
     ],
-    cors: true,
-    hmr: {
-      clientPort: 8081,
-      host: "8081-iudjr1x93ikq3ic9wcofs-583b4d74.sandbox.novita.ai"
+    cors: {
+      origin: "*",
+      credentials: true
+    },
+    hmr: false,  // Disable HMR to avoid WebSocket connection issues
+    watch: {
+      usePolling: true  // Use polling instead of WebSocket
     }
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

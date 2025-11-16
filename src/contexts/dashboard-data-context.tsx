@@ -100,6 +100,11 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Usar dados padrão diretamente (sistema novo sem dashboard legado)
+      setData(defaultDashboardData);
+      return;
+
+      /* Código legado desabilitado - usar apenas quando dashboard_data existir
       const { data: payload, error } = await supabase.rpc("get_dashboard_data");
 
       if (error) {
@@ -130,10 +135,11 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       } else {
         setData(defaultDashboardData);
       }
+      */
     } finally {
       setIsLoading(false);
     }
-  }, [fetchFromEdgeFunction, fetchFromTable]);
+  }, []);
 
   useEffect(() => {
     fetchData();
